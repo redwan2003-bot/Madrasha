@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>শিবগঞ্জ ফাযিল ডিগ্রী মাদরাসা</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tiro+Bangla&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <style>
+        :root { --primary: #1a5f7a; --secondary: #159895; --bg: #f0f4f8; --white: #ffffff; --text: #2c3e50; --border: #dcdde1; --shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Tiro Bangla', serif; background-color: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; padding-bottom: 20px; }
+        header { background: var(--primary); color: var(--white); text-align: center; padding: 15px 10px; box-shadow: var(--shadow); }
+        header h1 { font-size: 13pt; margin-bottom: 5px; font-weight: normal; }
+        header h2 { font-size: 14pt; font-weight: bold; }
+        .tabs { display: flex; background: var(--white); border-bottom: 2px solid var(--border); position: sticky; top: 0; z-index: 100; }
+        .tab-btn { flex: 1; padding: 12px 5px; background: none; border: none; font-family: 'Tiro Bangla', serif; font-size: 14px; font-weight: bold; color: var(--text); cursor: pointer; border-bottom: 3px solid transparent; }
+        .tab-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
+        .tab-content { display: none; padding: 15px; animation: fadeIn 0.3s ease; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .card { background: var(--white); padding: 15px; border-radius: 8px; box-shadow: var(--shadow); margin-bottom: 20px; }
+        .section-title { font-size: 15px; font-weight: bold; color: var(--primary); margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .btn-group { display: flex; gap: 10px; align-items: center; justify-content: center; grid-column: span 2; margin-top: 10px; }
+        select, input[type="text"], input[type="password"], input[type="number"] { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 4px; font-family: 'Tiro Bangla', serif; font-size: 14px; }
+        button.btn { background: var(--secondary); color: var(--white); border: none; padding: 10px 15px; border-radius: 4px; font-family: 'Tiro Bangla', serif; font-size: 14px; cursor: pointer; flex: 1; }
+        button.btn:hover { background: var(--primary); }
+        button.btn-reset { background: #95a5a6; } button.btn-reset:hover { background: #7f8c8d; }
+        
+        table.data-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
+        th, td { border: 1px solid var(--border); padding: 8px; text-align: left; }
+        th { background: #eef2f3; color: var(--primary); text-align: center; }
+        tr:nth-child(even) { background: #f9f9f9; }
+        .clickable { color: var(--secondary); cursor: pointer; text-decoration: underline; }
+        .clickable:hover { color: var(--primary); }
+        .student-name { font-size: 1.05em; }
+        
+        .popup-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
+        .popup-card { background: var(--white); padding: 20px; border-radius: 8px; width: 100%; max-width: 400px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); position: relative; max-height: 90vh; overflow-y: auto;}
+        .close-btn { position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; color: #ff4757; font-weight: bold; }
+        .popup-info p { margin-bottom: 10px; border-bottom: 1px dashed var(--border); padding-bottom: 5px; }
+        .popup-info strong { color: var(--primary); display: inline-block; width: 110px; vertical-align: top; }
+        .call-btn { display: inline-block; background: #27ae60; color: white; padding: 4px 10px; border-radius: 4px; text-decoration: none; font-size: 12px; margin-top: 5px; margin-left: 10px; }
+        .admin-input { margin-left: 10px; width: calc(100% - 120px); padding: 6px; border: 1px solid var(--border); border-radius: 3px; font-family: 'Tiro Bangla', serif; }
+        .login-box { text-align: center; padding-top: 50px; }
+        .hidden { display: none !important; }
+        
+        .radio-group { display: flex; gap: 15px; align-items: center; margin: 10px 0; flex-wrap: wrap; }
+        .radio-group label { display: flex; align-items: center; gap: 5px; font-size: 14px; }
+        .download-btns { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+        .download-btns button { flex: 1; min-width: 200px; }
+        
+        /* A4 ইমেজ লুক */
+         #form-display-area {
+            background: white;
+            width: 210mm;
+            min-height: 297mm;
+            padding: 0;
+            margin: 0 auto;
+            box-shadow: 0 0 20px rgba(0,0,0,0.15);
+            color: #000;
+            font-family: 'Tiro Bangla', serif;
+            overflow: auto;
+            box-sizing: border-box;
+        }
+        
+        table.form-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        table.form-table th, table.form-table td { border: 1px solid #000; padding: 5px; vertical-align: middle; color: #000; background: #fff; }
+        table.form-table th { font-weight: bold; text-align: center; }
+        table.form-table td { height: 1in; font-size: 11pt; }
+        
+        .cut-line { border-top: 2px dashed #000; margin: 30px 0; position: relative; text-align: center; }
+        .cut-line::after { content: '✂ কেটে নিন'; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: white; padding: 0 10px; font-size: 10px; color: #555; }
+        .chunk-container { page-break-inside: avoid; }
+        
+                #download-section.fixed-bottom {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>শিবগঞ্জ ফাযিল ডিগ্রী মাদরাসা</h1>
+        <h2>শিক্ষার্থী তথ্য</h2>
+    </header>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('tab-display', this)">ডেটা ডিসপ্লে</button>
+        <button class="tab-btn" onclick="switchTab('tab-sheet', this)">শিট ও ফর্ম</button>
+        <button class="tab-btn" onclick="switchTab('tab-admin', this)">অ্যাডমিন</button>
+    </div>
+
+    <!-- ট্যাব ১ -->
+    <div id="tab-display" class="tab-content active">
+        <div class="card">
+            <div class="section-title">ব্যাচ বাছাই</div>
+            <div class="form-grid" id="grid-d">
+                <select id="d-class" onchange="onClassChange('d')"><option value="">শ্রেণি বাছাই করুন</option></select>
+                <select id="d-year" class="hidden"><option value="">বর্ষ বাছাই করুন</option></select>
+                <select id="d-session"><option value="">সেশন</option></select>
+                <select id="d-admsYear"><option value="">ভর্তির বছর</option></select>
+                <select id="d-exYear"><option value="">পরীক্ষার বছর</option></select>
+                <select id="d-group"><option value="">গ্রুপ (ঐচ্ছিক)</option></select>
+                <div class="btn-group">
+                    <button class="btn" onclick="loadBatchData('d', false)">খুঁজুন</button>
+                    <button class="btn btn-reset" onclick="resetFilters('d')">রিসেট</button>
+                </div>
+            </div>
+            <div id="batch-table-container"></div>
+        </div>
+        <div class="card">
+            <div class="section-title">শিক্ষার্থী বাছাই</div>
+            <div class="form-grid" id="grid-s">
+                <select id="s-class" onchange="onClassChange('s')"><option value="">শ্রেণি বাছাই করুন</option></select>
+                <select id="s-year" class="hidden"><option value="">বর্ষ বাছাই করুন</option></select>
+                <select id="s-group"><option value="">গ্রুপ</option></select>
+                <input type="number" id="s-admsYear" placeholder="ভর্তির বছর">
+                <select id="s-roll"><option value="">রোল বাছাই করুন</option></select>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn" onclick="loadSingleStudent()">খুঁজুন</button>
+                    <button class="btn btn-reset" onclick="resetFilters('s')">রিসেট</button>
+                </div>
+            </div>
+            <div id="single-table-container"></div>
+        </div>
+    </div>
+
+    <!-- ট্যাব ২ -->
+    <div id="tab-sheet" class="tab-content">
+        <div class="card">
+            <div class="section-title">শিক্ষার্থী যোগাযোগ ফর্ম তৈরি</div>
+            <div class="form-grid" id="grid-p">
+                <select id="p-class" onchange="onClassChange('p')"><option value="">শ্রেণি বাছাই করুন</option></select>
+                <select id="p-year" class="hidden"><option value="">বর্ষ বাছাই করুন</option></select>
+                <select id="p-session"><option value="">সেশন</option></select>
+                <select id="p-admsYear"><option value="">ভর্তির বছর</option></select>
+            </div>
+            <!-- ত্রুটি ১ সংশোধন: এখান থেকে রেডিও বাটন বাদ দিয়ে নতুন ডিজাইন দেওয়া হলো -->
+            <div class="radio-group">
+                <span>গুচ্ছ সাইজ:</span> <input type="number" id="chunkSize" value="5" style="width: 60px;">
+                <label><input type="checkbox" id="isMixed"> মিক্সড</label>
+                <button class="btn btn-reset" style="width: auto; margin-top:0; padding: 5px 10px;" onclick="resetFilters('p')">রিসেট</button>
+            </div>
+            <button class="btn" onclick="generateFormView()">ফর্ম তৈরি করুন</button>
+        </div>
+        <div id="form-display-area" class="hidden"></div>
+              <div id="download-section" class="hidden download-btns fixed-bottom">
+            <button type="button" class="btn" style="background:#2c3e50;" onclick="downloadA4Images()">ডাউনলোড</button>
+        </div>
+    </div>
+
+    <!-- ট্যাব ৩ -->
+    <div id="tab-admin" class="tab-content">
+        <div id="admin-login" class="card login-box">
+            <div class="section-title">অ্যাডমিন লগইন</div>
+            <input type="password" id="admin-pw" placeholder="পাসওয়ার্ড দিন" style="max-width: 300px; margin: 0 auto;">
+            <button class="btn" style="max-width: 300px; margin: 10px auto 0 auto;" onclick="adminLogin()">প্রবেশ করুন</button>
+            <p id="login-error" style="color: red; margin-top: 10px; display: none;">পাসওয়ার্ড ভুল হয়েছে</p>
+        </div>
+        <div id="admin-panel" class="hidden">
+            <div class="card">
+                <div class="section-title">ব্যাচ বাছাই (অ্যাডমিন)</div>
+                <div class="form-grid" id="grid-a">
+                    <select id="a-class" onchange="onClassChange('a')"><option value="">শ্রেণি বাছাই করুন</option></select>
+                    <select id="a-year" class="hidden"><option value="">বর্ষ বাছাই করুন</option></select>
+                    <select id="a-session"><option value="">সেশন</option></select>
+                    <select id="a-admsYear"><option value="">ভর্তির বছর</option></select>
+                    <select id="a-exYear"><option value="">পরীক্ষার বছর</option></select>
+                    <select id="a-group"><option value="">গ্রুপ (ঐচ্ছিক)</option></select>
+                    <div class="btn-group">
+                        <button class="btn" onclick="loadBatchData('a', true)">খুঁজুন</button>
+                        <button class="btn btn-reset" onclick="resetFilters('a')">রিসেট</button>
+                    </div>
+                </div>
+                <div id="admin-batch-table-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="popup-overlay" id="popup-overlay" onclick="if(event.target===this)closePopup()">
+        <div class="popup-card" id="popup-card">
+            <span class="close-btn" onclick="closePopup()">&times;</span>
+            <div id="popup-content"></div>
+            <div id="popup-actions" style="margin-top: 15px; text-align: right; display: none;">
+                <button class="btn" style="width: auto; background: #27ae60;" onclick="saveAdminEdit()">সেভ করুন</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbxIVBgypvGICz2RH6KOszsWKiF9hNpRKQ163HLbaDXHe67vXKH9107elnNqI_hJbpM/exec'; 
+        let classMap = {};
+        let currentEditData = null;
+        let currentViewData = [];
+        let isViewAdmin = false;
+
+        document.getElementById('s-admsYear').value = new Date().getFullYear();
+
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        function resetFilters(prefix) {
+            const grid = document.getElementById(`grid-${prefix}`);
+            grid.querySelectorAll('select').forEach(sel => sel.selectedIndex = 0);
+            const yearEl = document.getElementById(`${prefix}-year`);
+            if(yearEl) yearEl.classList.add('hidden');
+            if(prefix === 's') document.getElementById('s-admsYear').value = new Date().getFullYear();
+              if(prefix === 'p') {
+                document.getElementById('form-display-area').innerHTML = '';
+                document.getElementById('form-display-area').classList.add('hidden');
+                document.getElementById('download-section').classList.add('hidden');
+                document.getElementById('chunkSize').value = 5;
+                document.getElementById('isMixed').checked = false;
+            }
+        }
+
+        async function init() {
+            if(API_URL === 'পূর্বের_তৈরি_করা_অ্যাপস_স্ক্রিপ্টের_URL') { alert('সতর্কতা: API_URL আপডেট করুন।'); return; }
+            try {
+                const res = await fetch(`${API_URL}?action=getClassList`);
+                const data = await res.json();
+                if (data.success) {
+                    classMap = data.data;
+                    ['d', 's', 'p', 'a'].forEach(p => {
+                        const el = document.getElementById(`${p}-class`);
+                        for (let key in classMap) el.innerHTML += `<option value="${key}">${classMap[key]}</option>`;
+                    });
+                }
+            } catch (e) { alert('API তে সমস্যা।'); }
+        }
+
+        async function onClassChange(prefix) {
+            let classCode = document.getElementById(`${prefix}-class`).value;
+            let yearEl = document.getElementById(`${prefix}-year`);
+            yearEl.classList.toggle('hidden', !(classCode === 'Fa' || classCode === 'Al'));
+            if(!(classCode === 'Fa' || classCode === 'Al')) yearEl.value = '';
+            ['session', 'admsYear', 'exYear', 'year', 'group', 'roll'].forEach(f => {
+                let el = document.getElementById(`${prefix}-${f}`);
+                if(!el) return;
+                let ph = f === 'session' ? 'সেশন' : f === 'admsYear' ? 'ভর্তির বছর' : f === 'exYear' ? 'পরীক্ষার বছর' : f === 'year' ? 'বর্ষ বাছাই করুন' : f === 'group' ? 'গ্রুপ' : 'রোল বাছাই করুন';
+                el.innerHTML = `<option value="">${ph}</option>`;
+            });
+            if (!classCode) return;
+            try {
+                const year = document.getElementById(`${prefix}-year`).value;
+                const res = await fetch(`${API_URL}?action=getFilterOptions&classCode=${classCode}&year=${year}`);
+                const data = await res.json();
+                if (data.success) {
+                    populateDropdown(`${prefix}-session`, data.sessions, 'সেশন');
+                    populateDropdown(`${prefix}-admsYear`, data.admsYears, 'ভর্তির বছর');
+                    populateDropdown(`${prefix}-exYear`, data.exYears, 'পরীক্ষার বছর');
+                    populateDropdownCustom(`${prefix}-year`, data.years.map(y => ({val: y, text: y === '1st' ? '১ম বর্ষ' : y === '2nd' ? '২য় বর্ষ' : y === '3rd' ? '৩য় বর্ষ' : y})), 'বর্ষ বাছাই করুন');
+                    populateDropdown(`${prefix}-group`, data.groups, 'গ্রুপ');
+                    populateDropdown(`${prefix}-roll`, data.rolls, 'রোল বাছাই করুন');
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        function populateDropdown(id, arr, ph) { const el = document.getElementById(id); if(!el) return; el.innerHTML = `<option value="">${ph}</option>`; arr.forEach(v => el.innerHTML += `<option value="${v}">${v}</option>`); }
+        function populateDropdownCustom(id, arrObj, ph) { const el = document.getElementById(id); if(!el) return; el.innerHTML = `<option value="">${ph}</option>`; arrObj.forEach(o => el.innerHTML += `<option value="${o.val}">${o.text}</option>`); }
+
+        // ইংরেজি থেকে বাংলা নম্বরে রূপান্তর
+        function toBanglaNum(numStr) {
+            const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+            return String(numStr).replace(/[0-9]/g, d => banglaDigits[d]);
+        }
+
+        function formatAtt(a) {
+            a = (a || '').trim().toLowerCase();
+            if (a === 'regular') return 'নিয়মিত';
+            if (a === 'occasional') return 'মাঝেমাঝে';
+            if (a === 'irregular' || a === 'irregualr') return 'গরহাজির';
+            return a;
+        }
+
+        function getRollStr(r) { return toBanglaNum(String(r).padStart(2, '0')); }
+
+        async function loadBatchData(prefix, adminMode) {
+            const classCode = document.getElementById(`${prefix}-class`).value;
+            const year = document.getElementById(`${prefix}-year`).value;
+            const session = document.getElementById(`${prefix}-session`).value;
+            const admsYear = document.getElementById(`${prefix}-admsYear`).value;
+            const exYear = document.getElementById(`${prefix}-exYear`).value;
+            const group = document.getElementById(`${prefix}-group`).value;
+            if (!classCode) return alert('শ্রেণি বাছাই করুন');
+            const query = new URLSearchParams({ action: 'forwardSearch', classCode, year, session, admsYear, exYear, group }).toString();
+            const res = await fetch(`${API_URL}?${query}`); const data = await res.json();
+            const container = document.getElementById(adminMode ? 'admin-batch-table-container' : 'batch-table-container');
+            if (data.success && data.count > 0) renderTable(container, data.data, adminMode);
+            else container.innerHTML = '<p style="text-align:center; color:red;">কোনো ডেটা পাওয়া যায়নি।</p>';
+        }
+
+        async function loadSingleStudent() {
+            const classCode = document.getElementById('s-class').value;
+            const roll = document.getElementById('s-roll').value;
+            const group = document.getElementById('s-group').value;
+            const admsYear = document.getElementById('s-admsYear').value;
+            if (!classCode || !roll || !group || !admsYear) return alert('সকল তথ্য পূরণ করুন');
+            const query = new URLSearchParams({ action: 'reverseSearch', classCode, group, roll, admsYear }).toString();
+            const res = await fetch(`${API_URL}?${query}`); const data = await res.json();
+            const container = document.getElementById('single-table-container');
+            if (data.success && data.count > 0) renderTable(container, data.data, false);
+            else container.innerHTML = '<p style="text-align:center; color:red;">শিক্ষার্থী পাওয়া যায়নি।</p>';
+        }
+
+        function renderTable(container, students, adminMode) {
+            currentViewData = students; isViewAdmin = adminMode;
+            let html = `<table class="data-table"><thead><tr><th>নাম</th><th>রোল</th><th>হাজিরা</th><th>অনুপস্থিতির কারণ</th><th>শিক্ষকের মন্তব্য</th></tr></thead><tbody>`;
+            students.forEach((st, index) => {
+                const waClick = adminMode ? `class="clickable" onclick="openAppendModal(${index}, 'whyAbsent')"` : '';
+                const cmClick = adminMode ? `class="clickable" onclick="openAppendModal(${index}, 'comment')"` : '';
+                html += `<tr>
+                    <td class="clickable" onclick="showPopup(${index})"><span class="student-name">${st.name}</span></td>
+                    <td style="text-align:center;">${getRollStr(st.roll)}</td>
+                    <td style="text-align:center;">${formatAtt(st.attendance)}</td>
+                    <td ${waClick}>${st.whyAbsent || '-'}</td>
+                    <td ${cmClick}>${st.comment || '-'}</td>
+                </tr>`;
+            });
+            html += `</tbody></table>`;
+            container.innerHTML = html;
+        }
+
+        function showPopup(index) {
+            let st = currentViewData[index]; currentEditData = st; let editMode = isViewAdmin;
+            const content = document.getElementById('popup-content'); const actions = document.getElementById('popup-actions');
+            let mobileHtml = '';
+            st.mobiles.forEach((mob, idx) => { mobileHtml += `<p><strong>মোবাইল:</strong> ${editMode ? `<input type="text" class="admin-input" id="edit-mob-${idx}" value="${mob}">` : mob} ${!editMode ? `<a href="tel:${mob}" class="call-btn">কল করুন</a>` : ''}</p>`; });
+            content.innerHTML = `<h3 style="margin-bottom:10px; color:var(--primary);">${st.className} | রোল: ${getRollStr(st.roll)}</h3>${mobileHtml}<p><strong>অভিভাবক:</strong> ${editMode ? `<input type="text" class="admin-input" id="edit-guardian" value="${st.guardian}">` : st.guardian}</p><p><strong>ঠিকানা:</strong> ${editMode ? `<input type="text" class="admin-input" id="edit-address" value="${st.address}">` : st.address}</p>`;
+            actions.style.display = editMode ? 'block' : 'none';
+            document.getElementById('popup-overlay').style.display = 'flex';
+        }
+        function closePopup() { document.getElementById('popup-overlay').style.display = 'none'; currentEditData = null; }
+        function getAdminFilterParams() { return { classCode: document.getElementById('a-class').value, year: document.getElementById('a-year').value, session: document.getElementById('a-session').value, admsYear: document.getElementById('a-admsYear').value, group: document.getElementById('a-group').value }; }
+
+        async function saveAdminEdit() {
+            let st = currentEditData; 
+            let mob1 = st.mobile01 || "", mob2 = st.mobile02 || "";
+            if(document.getElementById(`edit-mob-0`)) mob1 = document.getElementById(`edit-mob-0`).value || st.mobile01;
+            if(document.getElementById(`edit-mob-1`)) mob2 = document.getElementById(`edit-mob-1`).value || st.mobile02;
+            
+            let grdNew = st.guardian || ""; 
+            if(document.getElementById('edit-guardian')) grdNew = document.getElementById('edit-guardian').value || st.guardian;
+            let addNew = st.address || ""; 
+            if(document.getElementById('edit-address')) addNew = document.getElementById('edit-address').value || st.address;
+
+            let bp = getAdminFilterParams();
+            const params = new URLSearchParams({ ...bp, action: 'updateBasicInfo', roll: st.roll, mobID: st.mobID, mobile01: mob1, mobile02: mob2, guardian: grdNew, address: addNew });
+            const res = await fetch(`${API_URL}?${params.toString()}`); const data = await res.json();
+            
+            if(data.success) { 
+                closePopup(); 
+                loadBatchData('a', true); 
+            } else { 
+                alert(data.error); 
+            }
+        }
+
+        async function openAppendModal(index, type) {
+            let st = currentViewData[index]; const text = prompt(`নতুন ${type === 'whyAbsent' ? 'অনুপস্থিতির কারণ' : 'শিক্ষকের মন্তব্য'} লিখুন:`); if (!text) return;
+            let bp = getAdminFilterParams();
+            const params = new URLSearchParams({ ...bp, action: 'updateNote', roll: st.roll, [type]: text });
+            const res = await fetch(`${API_URL}?${params.toString()}`); const data = await res.json();
+            if(data.success) { alert(data.message); loadBatchData('a', true); } else alert(data.error);
+        }
+
+        async function adminLogin() {
+            const pw = document.getElementById('admin-pw').value; const res = await fetch(`${API_URL}?action=verifyPassword&password=${pw}`); const data = await res.json();
+            if (data.success) { document.getElementById('admin-login').classList.add('hidden'); document.getElementById('admin-panel').classList.remove('hidden'); document.getElementById('login-error').style.display = 'none'; }
+            else document.getElementById('login-error').style.display = 'block';
+        }
+
+        // ==========================================
+        // শিট ও ফর্ম ট্যাবের লজিক
+        // ==========================================
+        async function generateFormView() {
+            try {
+                const classCode = document.getElementById('p-class').value;
+                const year = document.getElementById('p-year').value;
+                const session = document.getElementById('p-session').value;
+                const admsYear = document.getElementById('p-admsYear').value;
+                if(!classCode) return alert('শ্রেণি বাছাই করুন');
+                const query = new URLSearchParams({ action: 'forwardSearch', classCode, year, session, admsYear }).toString();
+                const res = await fetch(`${API_URL}?${query}`); const data = await res.json();
+                if(!data.success || data.count === 0) return alert('এই ব্যাচে কোনো শিক্ষার্থী নেই।');
+
+                let students = data.data;
+                const chunkSize = Math.max(2, parseInt(document.getElementById('chunkSize').value) || 5);
+                const isMixed = document.getElementById('isMixed').checked;
+                let displayClassName = classMap[classCode];
+                if(year) displayClassName += ' ' + (year === '1st' ? '১ম বর্ষ' : year === '2nd' ? '২য় বর্ষ' : year === '3rd' ? '৩য় বর্ষ' : year);
+
+                let finalHtml = '';
+                let chunks = createChunks(students, chunkSize, isMixed);
+                chunks.forEach((chunk, index) => {
+                    finalHtml += generateFormHtml(chunk, displayClassName, session, admsYear);
+                    if(index < chunks.length - 1) finalHtml += `<div class="cut-line"></div>`;
+                });
+                document.getElementById('form-display-area').innerHTML = finalHtml;
+                document.getElementById('form-display-area').classList.remove('hidden');
+                document.getElementById('download-section').classList.remove('hidden');
+            } catch (error) { alert('ত্রুটি: ' + error.message); console.error(error); }
+        }
+
+        function createChunks(students, size, mixed) {
+            let chunks = [];
+            if(!students || students.length === 0) return chunks;
+            size = Math.max(1, size);
+            if (!mixed) {
+                for (let i = 0; i < students.length; i += size) chunks.push(students.slice(i, i + size));
+            } else {
+                let reg = students.filter(s => s.attendance === 'নিয়মিত');
+                let occ = students.filter(s => s.attendance === 'মাঝেমাঝে');
+                let irr = students.filter(s => s.attendance === 'গরহাজির');
+                let lists = [reg, occ, irr], current = [];
+                while (lists[0].length > 0 || lists[1].length > 0 || lists[2].length > 0) {
+                    for (let i = 0; i < 3; i++) {
+                        if (lists[i].length > 0) { current.push(lists[i].shift()); if (current.length === size) { chunks.push(current); current = []; } }
+                    }
+                }
+                if (current.length > 0) chunks.push(current);
+            }
+            return chunks;
+        }
+
+        function generateFormHtml(students, className, session, admsYear) {
+               let html = `<div class="chunk-container" style="page-break-inside: avoid;">
+                <div class="form-header" style="text-align: center; margin-bottom: 15px;">
+                    <h1 style="font-size: calc(13pt * 0.8); font-weight: bold; margin:0;">শিবগঞ্জ ফাযিল ডিগ্রী মাদরাসা</h1>
+                    <h2 style="font-size: calc(15pt * 0.8); font-weight: normal; margin: 5px 0 10px 0;">শিক্ষার্থী যোগাযোগ ফর্ম</h2>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 11pt; margin-bottom: 15px;">
+                    <span>শ্রেণি: ${className}</span>
+                    <span>সেশন: ${session || '-'}</span>
+                    <span>ভর্তির বছর: ${admsYear || '-'}</span>
+                </div>
+                <div style="font-size: 11pt; margin-bottom: 15px;">
+                যোগাযোগকারী শিক্ষকের নাম ও পদবী:  _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+                </div>
+                <table class="form-table">
+                    <thead><tr>
+                        <th style="width: 40px;">ক্রমিক</th>
+                        <th style="width: 40%;">শিক্ষার্থী পরিচিতি</th>
+                        <th style="width: 100px;">যোগাযোগের<br>তারিখ ও সময়</th>
+                        <th>শিক্ষকের মন্তব্য</th>
+                    </tr></thead><tbody>`;
+            
+            students.forEach((st, i) => {
+                let grpShort = st.groupCode ? st.groupCode.substring(0, 3) : '';
+                let rollStr = getRollStr(st.roll);
+                
+let idHtml = `<div>${st.name} # রোল: <b>${rollStr}</b> ${st.group ? '(' + st.group + ')' : ''}</div>`;
+idHtml += `<div>কল আইডি: <b></div><div>${st.mobID || ''}</b></div>`;
+idHtml += `<div>মোবাইল নম্বর: ${st.mobiles.join(', ')}</div>`;
+                
+                html += `<tr>
+                    <td style="text-align:center;">${i + 1}</td>
+                    <td>${idHtml}</td>
+                    <td></td>
+                    <td></td>
+                </tr>`;
+            });
+            html += `</tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="4" style="border: none; padding: 20px 5px 5px 5px; vertical-align: top;">
+                            <div style="font-size: 11pt; margin-bottom: 15px;">
+                                জমাদানের তারিখ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+                            </div>
+                            <div style="font-size: 11pt; margin-top: 10px;">
+                                <strong>শিক্ষকের স্বাক্ষর</strong>
+                                <div style="border-top: 1px solid #000; width: 200px; margin-top: 30px;"></div>
+                            </div>
+                        </td>
+                    </tr>
+                </tfoot>
+            </table></div>`;
+            return html;
+        }
+        
+        // প্রতিটি গুচ্ছ/পৃষ্ঠাকে আলাদা আলাদা A4 ইমেজ ডাউনলোড করার ফাংশন
+        async function downloadA4Images() {
+            if(typeof html2canvas === 'undefined'){ alert('লাইব্রেরি লোড হচ্ছে, আবার চেষ্টা করুন।'); return; }
+            
+            const chunks = document.querySelectorAll('#form-display-area .chunk-container');
+            if(chunks.length === 0) return alert('প্রথমে ফর্ম তৈরি করুন।');
+
+            // সব গুচ্ছের অরিজিনাল ডিসপ্লে সংরক্ষিপ্তি ব্যাকআপ করা
+            const originalDisplays = [];
+            chunks.forEach(el => originalDisplays.push(el.style.display));
+
+            for (let i = 0; i < chunks.length; i++) {
+                // সামান্য সময় রেন্ডার হওয়ে অপেক্ষা করা
+                await new Promise(r => setTimeout(r, 200));
+
+                chunks[i].style.width = '210mm';
+                chunks[i].style.minHeight = '297mm';
+                chunks[i].style.padding = '0.5in';
+                chunks[i].style.backgroundColor = '#ffffff';
+                chunks[i].style.boxSizing = 'border-box';
+                
+                const canvas = await html2canvas(chunks[i], {
+                    scale: 2, 
+                    useCORS: true, 
+                    backgroundColor: "#ffffff"
+                });
+                
+                const link = document.createElement('a');
+                link.download = `শিট_পৃষ্ঠা_${toBanglaNum(i + 1)}.jpg`;
+                link.href = canvas.toDataURL('image/jpeg', 0.95);
+                link.click();
+
+                chunks[i].style.width = '';
+                chunks[i].style.minHeight = '';
+                chunks[i].style.padding = '';
+                chunks[i].style.backgroundColor = '';
+                chunks[i].style.boxSizing = '';
+            } // ত্রুটি ২ সংশোধন: এই বন্ধনীটি for লুপ শেষ করার জন্য এখানে আনা হয়েছে
+
+            // সবকিছু আবার আগের মতো দেখাবে
+            chunks.forEach((el, idx) => { el.style.display = originalDisplays[idx]; });
+        }
+
+        init();
+    </script>
+</body>
+</html>

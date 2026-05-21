@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>শিক্ষকের ক্লাস বিবরণী - শিবগঞ্জ ফাযিল ডিগ্রী মাদরাসা</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tiro+Bangla:ital@0;1&display=swap');
+        
+        body {
+            font-family: 'Tiro Bangla', serif;
+            background-color: #f8fafc;
+            color: #334155;
+            font-size: 93.5%; 
+        }
+
+        .official-header {
+            background-color: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            position: sticky;
+            top: 0;
+            z-index: 40;
+        }
+
+        .inst-title {
+            font-size: 115%; 
+            font-weight: 500;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.25em;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        .alphabet-list-text {
+            font-size: 110%; 
+            color: #0ea5e9;  
+            font-weight: 400; 
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            background-color: #059669;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 1.15em; 
+            font-weight: 400; 
+            margin-top: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2);
+            border: none;
+            cursor: pointer;
+        }
+
+        .download-btn:hover {
+            background-color: #047857;
+            transform: translateY(-1px);
+        }
+
+        #hidden-canvas-container {
+            position: absolute;
+            left: -9999px;
+            top: -9999px;
+        }
+
+        /* A4 Image specific styles */
+        .a4-page {
+            width: 794px; 
+            height: 1123px;
+            background: white !important;
+            padding: 40px 40px 40px 100px; 
+            color: black;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start; 
+            position: relative;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        .image-header-container {
+            width: 100%;
+            text-align: center;
+            margin-bottom: 25px; 
+            margin-left: -30px; 
+            font-family: 'Tiro Bangla', serif;
+        }
+
+        .inst-name-image {
+            margin: 0;
+            font-size: 15.4px; 
+            font-weight: 400; 
+            color: black;
+        }
+
+        .report-title-image {
+            margin: 8px 0; 
+            font-size: 14.45px; 
+            color: black; 
+            font-weight: 400; 
+        }
+
+        .image-table {
+            border-collapse: collapse;
+            width: auto; 
+            margin-left: 0;
+            border: 1px solid black;
+        }
+
+        .image-table th, .image-table td {
+            border: 0.5px solid black; 
+            padding: 5px 12px 7px 12px; 
+            text-align: center;
+            font-size: 14px; 
+            color: black;
+            background: white !important;
+            white-space: nowrap; 
+            vertical-align: top;
+        }
+
+        .image-table th {
+            font-weight: bold;
+            background-color: #f0f0f0 !important; 
+        }
+
+        .text-left-cell { text-align: left !important; }
+
+        .loader {
+            border: 2px solid #f1f5f9;
+            border-top: 2px solid #64748b;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .subject-divider {
+            background-color: #f1f5f9;
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #475569;
+            margin-top: 1.5rem;
+            margin-bottom: 0.6rem;
+            border-radius: 6px;
+            display: block;
+            width: 100%;
+        }
+
+        .card-grid { display: flex; flex-direction: column; gap: 8px; }
+
+        .mobile-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 16px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .card-details-line {
+            font-size: 108%; 
+            line-height: 1.4;
+            padding-left: 2px;
+        }
+
+        .details-btn {
+            background-color: #dc2626; color: white; padding: 4px 12px;
+            border-radius: 12px; font-size: 11px; font-weight: bold;
+            border: 1px solid #b91c1c; cursor: pointer;
+            display: inline-flex; align-items: center; margin-left: 10px;
+        }
+
+        .list-container { max-width: 800px; margin: 10px auto; padding: 10px; }
+
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px); display: none; justify-content: center;
+            align-items: center; z-index: 100; padding: 16px;
+        }
+
+        .modal-container {
+            background: white; width: 100%; max-width: 500px;
+            border-radius: 16px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        .footer-image-text {
+            width: 100%; 
+            margin-top: auto; 
+            padding-top: 15px; 
+            font-size: 12px; 
+            text-align: right; 
+            color: #000;
+            line-height: 1.4;
+            padding-right: 40px; 
+        }
+
+        /* Modal sub-header styling */
+        #modal-teacher-sub {
+            font-size: calc(11px * 1.08); /* ৮% বড় */
+            color: #7c3aed; /* বেগুনি রঙ (Purple/Violet) */
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+<nav class="bg-sky-800 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+            <!-- ডেস্কটপ মেনু -->
+            <div class="hidden md:flex items-center space-x-4">
+                <a href="/" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">মূল পাতা</a>
+                <a href="/office.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">অফিস প্যানেল</a>
+                <a href="/admin.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">এডমিন প্যানেল</a>
+                <a href="/sutdentdata.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">শিক্ষার্থী তথ্য</a>
+                <a href="/routine.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">ব্যক্তিগত রুটিন</a>
+                <a href="/weeklyroutine.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">সাপ্তাহিক রুটিন</a> 
+                <a href="/classwiseroutine.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">শ্রেণিভিত্তিক রুটিন</a> 
+                <a href="/classcount.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">শিক্ষকের সাপ্তাহিক ক্লাস বিবরণী</a>
+            </div>
+            <!-- মোবাইল মেনু বাটন (হ্যামবার্গার আইকন) -->
+            <div class="md:hidden flex items-center">
+                <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
+                    <span class="sr-only">Open main menu</span>
+                    <!-- Icon when menu is closed -->
+                    <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                    <!-- Icon when menu is open (optional, for better UX) -->
+                    <svg class="hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- ডানপাশের ফাঁকা জায়গা পূরণের জন্য (ঐচ্ছিক) -->
+            <div class="hidden md:block">
+                 <div class="w-px h-px"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- মোবাইল মেনু, যা বাটনে ক্লিক করলে দেখা যাবে -->
+   <div class="md:hidden hidden" id="mobile-menu">
+        <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            <a href="/" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">মূল পাতা</a>
+            <a href="/office.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">অফিস প্যানেল</a>
+            <a href="/admin.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">এডমিন প্যানেল</a>
+            <a href="/sutdentdata.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md font-medium">শিক্ষার্থী তথ্য</a>
+            <a href="/routine.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">ব্যক্তিগত রুটিন</a>
+            <a href="/weeklyroutine.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md font-medium">সাপ্তাহিক রুটিন</a>                
+            <a href="/classwiseroutine.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md font-medium">শ্রেণিভিত্তিক রুটিন</a> 
+            <a href="/classcount.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md font-medium">শিক্ষকের ক্লাস বিবরণী</a>
+        </div>
+    </div>
+</nav>
+
+<!-- মোবাইল মেনু কাজ করার জন্য প্রয়োজনীয় জাভাস্ক্রিপ্ট -->
+<script>
+    //DOMContentLoaded অপেক্ষা করে যাতে DOM এলিমেন্টগুলো লোড হয়
+    document.addEventListener('DOMContentLoaded', () => {
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const icons = mobileMenuButton.querySelectorAll('svg');
+
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+            // আইকন পরিবর্তন করার জন্য (বন্ধ/খোলা)
+            icons.forEach(icon => icon.classList.toggle('hidden'));
+        });
+    });
+</script>
+
+    <header class="official-header py-4 px-4 shadow-sm">
+        <div class="max-w-xl mx-auto">
+            <div class="text-center mb-1">
+                <span class="inst-title">শিবগঞ্জ ফাযিল ডিগ্রী মাদরাসা</span>
+                <h2 class="text-slate-700 text-lg font-bold">শিক্ষকের ক্লাস বিবরণী</h2>
+            </div>
+            <div class="text-center pb-2">
+                <span class="alphabet-list-text">বিষয়ভিত্তিক ও বর্ণানুক্রমিক তালিকা</span>
+                <br>
+                <button onclick="downloadAsJPG()" class="download-btn" id="btn-text">
+                    <i class="fas fa-image mr-2"></i> ডাউনলোড করুন
+                </button>
+            </div>            
+        </div>
+    </header>
+
+    <div id="hidden-canvas-container"></div>
+
+    <div class="list-container">
+        <div id="loading" class="py-20 text-center">
+            <div class="loader mx-auto mb-3"></div>
+            <p class="text-slate-400 text-xs italic">তথ্য সংগ্রহ করা হচ্ছে...</p>
+        </div>
+
+        <main id="content-area" class="hidden">
+            <div id="master-list"></div>
+            <footer class="mt-10 mb-10 px-6 py-10 text-center border-t border-slate-200">
+                <p id="stats-summary" class="text-slate-500 text-xs font-bold bg-white inline-block px-4 py-2 rounded-full border border-slate-100 shadow-sm"></p>
+                <p class="text-[9px] text-slate-300 mt-6 tracking-widest uppercase font-medium">শিবগঞ্জ ফাযিল ডিগ্রী মাদরাসা</p>
+            </footer>
+        </main>
+    </div>
+
+    <!-- Modal -->
+    <div id="details-modal" class="modal-overlay" onclick="closeModal()">
+        <div class="modal-container" onclick="event.stopPropagation()">
+            <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <div class="pl-2">
+                    <h3 id="modal-teacher-name" class="font-bold text-slate-800 text-base">লোড হচ্ছে...</h3>
+                    <p id="modal-teacher-sub" class=""></p>
+                </div>
+                <button onclick="closeModal()" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-4 bg-slate-50/50 max-h-[60vh] overflow-y-auto" id="modal-body">
+                <div id="class-list-content"></div>
+            </div>
+            <div class="p-4 border-t border-slate-100 text-center">
+                <button onclick="closeModal()" class="px-8 py-2 bg-slate-900 text-white rounded-lg text-xs font-bold">ঠিক আছে</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxvSNDr8GagnET19YZACL65UcnFfWAKSWhXAttZVWAC5VddGpjZ0lDH40VQYkBFTg/exec';
+        const designationOrder = ['সহকারি অধ্যাপক', 'প্রভাষক', 'সহকারি শিক্ষক', 'সহকারি মৌলভী', 'কম্পিউটার শিক্ষক', 'জুনিয়র শিক্ষক', 'এবতেদায়ি জুনিয়র শিক্ষক', 'অফিস সহকারি'];
+
+        let masterData = [];
+        const bnNum = (n) => String(n).replace(/[0-9]/g, w => ({'0':'০','1':'১','2':'২','3':'৩','4':'৪','5':'৫','6':'৬','7':'৭','8':'৮','9':'৯'}[w]));
+
+        async function fetchData() {
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=summary`);
+                masterData = await response.json();
+                
+                masterData.sort((a, b) => {
+                    let idxA = designationOrder.indexOf(a.designation);
+                    let idxB = designationOrder.indexOf(b.designation);
+                    if (idxA === -1) idxA = 999; if (idxB === -1) idxB = 999;
+                    if (idxA !== idxB) return idxA - idxB;
+                    return (a['R_Tr.Sub'] || '').localeCompare(b['R_Tr.Sub'] || '', 'bn');
+                });
+
+                renderContent();
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('content-area').classList.remove('hidden');
+            } catch (err) {
+                document.getElementById('loading').innerHTML = `<p class="text-red-500">তথ্য লোড করা সম্ভব হয়নি।</p>`;
+            }
+        }
+
+        function renderContent() {
+            const list = document.getElementById('master-list');
+            list.innerHTML = '';
+            let currentGroup = "";
+            let currentGrid = null;
+            let totalCls = 0;
+
+            masterData.forEach((t, index) => {
+                totalCls += t.total;
+                if (t.designation !== currentGroup) {
+                    currentGroup = t.designation;
+                    const div = document.createElement('div');
+                    div.className = "subject-divider shadow-sm";
+                    div.innerText = currentGroup;
+                    list.appendChild(div);
+                    currentGrid = document.createElement('div');
+                    currentGrid.className = "card-grid";
+                    list.appendChild(currentGrid);
+                }
+
+                const card = document.createElement('div');
+                card.className = "mobile-card";
+                card.innerHTML = `
+                    <div class="flex-1 pr-3 overflow-hidden">
+                        <div class="flex items-center mb-1">
+                            <div class="text-slate-800 text-[14.5px] font-bold truncate pl-0.5">${t.name}</div>
+                            <button onclick="openDetails(${index})" class="details-btn">
+                                <i class="fas fa-info-circle mr-1"></i> বিস্তারিত
+                            </button>
+                        </div>
+                        <div class="card-details-line flex flex-wrap gap-2 text-slate-500 pl-0.5">
+                            <span class="text-sky-600 font-medium">${t['R_Tr.Sub'] || 'বিষয় নেই'}</span>
+                            <span>|</span>
+                            <span>রেগুলার: <b class="text-green-600">${bnNum(t.regular)}</b></span>
+                            <span>প্রক্সি: ${t.proxy > 0 ? `<b class="bg-amber-100 text-orange-600 px-1 rounded">${bnNum(t.proxy)}</b>` : bnNum(0)}</span>
+                        </div>
+                    </div>
+                    <div class="text-right pl-3 border-l flex flex-col items-center shrink-0">
+                        <div class="text-xl font-black text-blue-600">${bnNum(t.total)}</div>
+                        <div class="text-[9px] uppercase font-bold text-slate-400">মোট</div>
+                    </div>
+                `;
+                currentGrid.appendChild(card);
+            });
+            document.getElementById('stats-summary').innerText = `শিক্ষক: ${bnNum(masterData.length)} জন | সর্বমোট ক্লাস: ${bnNum(totalCls)}টি`;
+        }
+
+        async function downloadAsJPG() {
+            const btn = document.getElementById('btn-text');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> প্রসেসিং...';
+            btn.disabled = true;
+
+            const now = new Date();
+            const formattedDate = bnNum(now.toLocaleDateString('bn-BD'));
+            const canvasContainer = document.getElementById('hidden-canvas-container');
+            canvasContainer.innerHTML = ''; 
+
+            const ROWS_PER_PAGE = 25; 
+            const totalPages = Math.ceil(masterData.length / ROWS_PER_PAGE);
+
+            for (let p = 0; p < totalPages; p++) {
+                const pageDiv = document.createElement('div');
+                pageDiv.className = 'a4-page';
+                const start = p * ROWS_PER_PAGE;
+                const pageData = masterData.slice(start, start + ROWS_PER_PAGE);
+
+                let tableRows = '';
+                pageData.forEach((t, i) => {
+                    tableRows += `
+                        <tr>
+                            <td style="width: 40px;">${bnNum(start + i + 1)}</td>
+                            <td class="text-left-cell">${t.name}</td>
+                            <td style="width: 45px;">${bnNum(t.total)}</td>
+                            <td style="width: 45px;">${bnNum(t.proxy)}</td>
+                            <td style="width: 45px;">${bnNum(t.regular)}</td>
+                            <td class="text-left-cell">${t.designation}</td>
+                            <td class="text-left-cell">${t['R_Tr.Sub'] || ''}</td>
+                        </tr>
+                    `;
+                });
+
+                pageDiv.innerHTML = `
+                    <div class="image-header-container">
+                        <h1 class="inst-name-image">শিবগঞ্জ ফাযিল ডিগ্রী মাদরাসা</h1>
+                        <h2 class="report-title-image">
+                            শিক্ষকের ক্লাস বিবরণী (পৃষ্ঠা-${bnNum(p+1)}/${bnNum(totalPages)})
+                        </h2>
+                        <p style="font-size: 13px; margin: 0;">তারিখ: ${formattedDate}</p>
+                    </div>
+                    <table class="image-table">
+                        <thead>
+                            <tr>
+                                <th>ক্রম:</th>
+                                <th>শিক্ষকের নাম</th>
+                                <th>মোট</th>
+                                <th>প্রক্সি</th>
+                                <th>নিজ</th>
+                                <th>পদবী</th>
+                                <th>বিষয়</th>
+                            </tr>
+                        </thead>
+                        <tbody>${tableRows}</tbody>
+                    </table>
+                    <div class="footer-image-text">
+                        রুটিন পোর্টাল থেকে ${formattedDate} তারিখে ডাউনলোডকৃত<br>
+                        বিষয়ভিত্তিক ও বর্ণানুক্রমিক তালিকা
+                    </div>
+                `;
+
+                canvasContainer.appendChild(pageDiv);
+                
+                try {
+                    const canvas = await html2canvas(pageDiv, { 
+                        scale: 3, 
+                        backgroundColor: "#ffffff",
+                        logging: false,
+                        useCORS: true
+                    });
+                    
+                    const ctx = canvas.getContext('2d');
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const data = imageData.data;
+                    
+                    for (let i = 0; i < data.length; i += 4) {
+                        const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                        const val = avg > 210 ? 255 : 0; 
+                        data[i] = val;
+                        data[i + 1] = val;
+                        data[i + 2] = val;
+                        data[i + 3] = 255; 
+                    }
+                    ctx.putImageData(imageData, 0, 0);
+
+                    const link = document.createElement('a');
+                    link.download = `Class_Report_Page_${p + 1}.jpg`;
+                    link.href = canvas.toDataURL('image/jpeg', 1.0);
+                    link.click();
+                } catch (e) {
+                    console.error("Canvas error:", e);
+                }
+            }
+
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        }
+
+        function openDetails(dataIndex) {
+            const t = masterData[dataIndex];
+            document.getElementById('modal-teacher-name').innerText = t.name;
+            document.getElementById('modal-teacher-sub').innerText = `${t.designation} • ${t['R_Tr.Sub'] || 'বিষয় নেই'}`;
+            const content = document.getElementById('class-list-content');
+            content.innerHTML = '<div class="text-center py-10"><div class="loader mx-auto"></div></div>';
+            document.getElementById('details-modal').style.display = 'flex';
+            
+            fetch(`${SCRIPT_URL}?action=details&name=${encodeURIComponent(t.name)}`)
+                .then(res => res.json())
+                .then(data => {
+                    let html = '';
+                    const keys = Object.keys(data).sort();
+                    
+                    keys.forEach(key => {
+                        const item = data[key];
+                        const proxyVal = item.proxy || 0;
+                        const regVal = item.regular || 0;
+                        const subName = item.subject || 'বিষয়হীন';
+                        const clsName = item.className || key.split(' - ')[0]; 
+                        
+                        const regDisplay = regVal > 0 ? `<div><div class="text-[9px] text-slate-400 uppercase font-bold tracking-tighter">রেগুলার</div><div class="font-bold text-green-600">${bnNum(regVal)}</div></div>` : '';
+                        const proxyDisplay = proxyVal > 0 ? `<div><div class="text-[9px] text-slate-400 uppercase font-bold tracking-tighter">প্রক্সি</div><div class="font-bold text-orange-600">${bnNum(proxyVal)}</div></div>` : '';
+                        
+                        if (regVal > 0 || proxyVal > 0) {
+                            html += `
+                                <div class="flex justify-between items-center p-3 border rounded-lg mb-2 bg-white shadow-sm hover:border-sky-200 transition-colors">
+                                    <div class="flex-1 pr-2 overflow-hidden pl-2">
+                                        <div class="font-bold text-slate-700 text-sm truncate pl-0.5">${clsName}</div>
+                                        <div class="text-[11px] text-sky-600 font-medium truncate pl-0.5">বিষয়: ${subName}</div>
+                                    </div>
+                                    <div class="flex gap-4 text-right shrink-0 border-l pl-3 ml-1">
+                                        ${regDisplay}
+                                        ${proxyDisplay}
+                                    </div>
+                                </div>`;
+                        }
+                    });
+
+                    content.innerHTML = html || '<p class="text-center py-10 text-slate-400">কোনো তথ্য পাওয়া যায়নি</p>';
+                });
+        }
+
+        function closeModal() { document.getElementById('details-modal').style.display = 'none'; }
+        window.onload = fetchData;
+    </script>
+</body>
+</html>

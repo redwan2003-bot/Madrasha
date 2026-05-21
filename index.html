@@ -1,0 +1,2625 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ক্লাস মনিটরিং অ্যাপ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tiro+Bangla&display=swap" rel="stylesheet"/>
+    <style>
+        :root {
+            --c-primary-bg: #0d2e4f;
+            --c-primary-bg-hover: #1f4a7c;
+            --c-accent-bg: #0d9488;
+            --c-accent-bg-hover: #115e59;
+            --c-accent-bg-light: #0d9488;
+            --c-accent-bg-light-hover: #0f766e;
+            --c-danger-bg: #b91c1c;
+            --c-danger-bg-hover: #991b1b;
+            --c-danger-bg-confirm: #ef4444;
+            --c-danger-bg-confirm-hover: #dc2626;
+            --c-neutral-bg: #9ca3af;
+            --c-neutral-bg-hover: #6b7281;
+            --c-neutral-bg-light: #d1d5db;
+            --c-neutral-bg-light-hover: #9ca3af;
+            --c-brown-bg: #6d423a;
+            --c-brown-bg-hover: #5a362f;
+            --c-text-theme: #2364aa;
+            --c-spinner: #3498db;
+        }
+
+        body {
+            font-family: 'Tiro Bangla', serif;
+            background-color: #f4f6f9;
+        }
+        .button-transition { transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease; }
+        .button-animate { transform: translateY(-3px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .collapsible-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+
+        .btn-primary { background-color: var(--c-primary-bg); }
+        .btn-primary:hover { background-color: var(--c-primary-bg-hover); }
+        .btn-accent { background-color: var(--c-accent-bg); }
+        .btn-accent:hover { background-color: var(--c-accent-bg-hover); }
+        .btn-accent-light { background-color: var(--c-accent-bg-light); }
+        .btn-accent-light:hover { background-color: var(--c-accent-bg-light-hover); }
+        .btn-danger { background-color: var(--c-danger-bg); }
+        .btn-danger:hover { background-color: var(--c-danger-bg-hover); }
+        .btn-danger-confirm { background-color: var(--c-danger-bg-confirm); }
+        .btn-danger-confirm:hover { background-color: var(--c-danger-bg-confirm-hover); }
+        .btn-neutral { background-color: var(--c-neutral-bg); }
+        .btn-neutral:hover { background-color: var(--c-neutral-bg-hover); }
+        .btn-neutral-light { background-color: var(--c-neutral-bg-light); color: black; }
+        .btn-neutral-light:hover { background-color: var(--c-neutral-bg-light-hover); }
+        .btn-brown { background-color: var(--c-brown-bg); }
+        .btn-brown:hover { background-color: var(--c-brown-bg-hover); }
+        .text-theme { color: var(--c-text-theme); }
+
+        .btn-report.active {
+            background-color: var(--c-accent-bg);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transform: translateY(-2px);
+        }
+        
+        .marquee-container {
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+        }
+        .marquee-text {
+            display: inline-block;
+            padding-left: 100%;
+            animation: marquee 45s linear infinite;
+        }
+        @keyframes marquee {
+            0%   { transform: translate(0, 0); }
+            100% { transform: translate(-100%, 0); }
+        }
+
+		@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+		.loading-container {
+		    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+		    background-color: rgba(244, 246, 249, 0.95);
+		    display: flex;
+		    flex-direction: column; justify-content: center; align-items: center; z-index: 9999;
+		}
+		.loading-spinner-wrapper {
+		    position: relative;
+		    width: 120px;
+		    height: 120px;
+		}
+		.loading-spinner {
+		    width: 100%; height: 100%; border-radius: 50%;
+		    background: conic-gradient(orange, #9370DB, skyblue, orange);
+		    animation: spin 1.5s linear infinite;
+		}
+		.loading-logo {
+		    position: absolute;
+		    top: 50%;
+		    left: 50%;
+		    transform: translate(-50%, -50%);
+		    width: 104px;
+		    height: 104px;
+		    background-color: #f4f6f9;
+		    border-radius: 50%;
+		    display: flex;
+		    justify-content: center;
+		    align-items: center;
+		}
+		.loading-logo img {
+		    width: 80px;
+		    height: 80px;
+		    border-radius: 50%;
+		}
+		.loading-text {	
+		    font-size: 1.2rem; color: #0d2e4f;
+		    margin-top: 1.5rem; text-align: center;	
+		}
+
+        .z-60 { z-index: 60; }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid #fff;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        #duty-roster-container table {
+            font-size: 1.05em;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4">
+<nav class="bg-sky-800 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+            <!-- ডেস্কটপ মেনু -->
+            <div class="hidden md:flex items-center space-x-4">
+                <a href="/" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">মূল পাতা</a>
+                <a href="/office.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">অফিস প্যানেল</a>
+                <a href="/admin.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">এডমিন প্যানেল</a>
+                <a href="/sutdentdata.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">শিক্ষার্থী তথ্য</a>
+                <a href="/routine.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">ব্যক্তিগত রুটিন</a>
+                <a href="/weeklyroutine.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">সাপ্তাহিক রুটিন</a> 
+                <a href="/classwiseroutine.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">শ্রেণিভিত্তিক রুটিন</a> 
+                <a href="/classcount.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">শিক্ষকের সাপ্তাহিক ক্লাস বিবরণী</a>
+            </div>
+            <!-- মোবাইল মেনু বাটন (হ্যামবার্গার আইকন) -->
+            <div class="md:hidden flex items-center">
+                <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
+                    <span class="sr-only">Open main menu</span>
+                    <!-- Icon when menu is closed -->
+                    <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                    <!-- Icon when menu is open (optional, for better UX) -->
+                    <svg class="hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- ডানপাশের ফাঁকা জায়গা পূরণের জন্য (ঐচ্ছিক) -->
+            <div class="hidden md:block">
+                 <div class="w-px h-px"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- মোবাইল মেনু, যা বাটনে ক্লিক করলে দেখা যাবে -->
+   <div class="md:hidden hidden" id="mobile-menu">
+        <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            <a href="/" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">মূল পাতা</a>
+            <a href="/office.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">অফিস প্যানেল</a>
+            <a href="/admin.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">এডমিন প্যানেল</a>
+            <a href="/sutdentdata.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md font-medium">শিক্ষার্থী তথ্য</a>
+            <a href="/routine.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">ব্যক্তিগত রুটিন</a>
+            <a href="/weeklyroutine.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md font-medium">সাপ্তাহিক রুটিন</a>                
+            <a href="/classwiseroutine.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md font-medium">শ্রেণিভিত্তিক রুটিন</a> 
+            <a href="/classcount.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md font-medium">শিক্ষকের ক্লাস বিবরণী</a>
+        </div>
+    </div>
+</nav>
+
+<!-- মোবাইল মেনু কাজ করার জন্য প্রয়োজনীয় জাভাস্ক্রিপ্ট -->
+<script>
+    //DOMContentLoaded অপেক্ষা করে যাতে DOM এলিমেন্টগুলো লোড হয়
+    document.addEventListener('DOMContentLoaded', () => {
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const icons = mobileMenuButton.querySelectorAll('svg');
+
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+            // আইকন পরিবর্তন করার জন্য (বন্ধ/খোলা)
+            icons.forEach(icon => icon.classList.toggle('hidden'));
+        });
+    });
+</script>
+    <div id="app-container" class="w-full max-w-sm mx-auto bg-gray-100 p-6 rounded-xl shadow-2xl border border-gray-200">
+        <div class="text-center">
+            <h1 class="text-xl text-gray-800">শিবগঞ্জ ফাযিল ডিগ্রী মাদ্রাসা</h1>
+            <p class="text-sm text-gray-600">শিবগঞ্জ-৫৮১০, বগুড়া।</p>
+        </div>
+
+        <!-- ================================== -->
+        <!--        Main Section                -->
+        <!-- ================================== -->
+        <div id="main-section">
+            <h2 class="text-2xl font-bold text-teal-700 mt-4 mb-6 text-center" id="main-title">ক্লাস মনিটরিং অ্যাপ</h2>
+            <div id="office-letter-container" class="marquee-container bg-yellow-100 border-y border-yellow-300 p-2 my-4 rounded-lg overflow-hidden whitespace-nowrap hidden">
+                <span id="office-letter-text" class="marquee-text text-blue-900" style="font-size: 1.03em;"></span>
+            </div>
+<div class="flex items-center justify-between mb-6">
+    <div class="space-y-2 text-black text-md text-left">
+        <p><strong>তারিখ:</strong> <span id="current-date"></span></p>
+        <p><strong>বার:</strong> <span id="current-day"></span></p>
+        <p><strong>সময়:</strong> <span id="current-time"></span></p>
+    </div>
+    <div>
+        <img src="https://i.imgur.com/a7FaWO1.jpg" alt="লোগো" class="w-20 h-20 rounded-full border-2 border-teal-200 shadow-md">
+    </div>
+</div>
+            
+            <div id="holiday-message" class="bg-blue-100 border-t-4 border-blue-500 rounded-b text-blue-900 px-4 py-3 shadow-md mb-6 hidden" role="alert">
+                <!-- Holiday details injected here -->
+            </div>
+
+            <div id="off-time-status-container" class="bg-gray-50 border border-gray-200 text-gray-700 rounded-lg p-3 text-center mb-8 hidden">
+                <p id="off-time-text" class="text-red-600 font-normal"></p>
+            </div>
+
+            <div id="period-status-container" class="bg-teal-50 border border-teal-200 text-teal-700 rounded-lg p-3 text-center mb-8 hidden">
+                <p><strong>এখন চলছে:</strong> <span id="period-status-text" class="font-normal text-black"></span></p>
+            </div>
+            
+            <div id="main-buttons-container" class="flex flex-col space-y-3">
+                <button id="btn-teacher-entry" class="btn-primary text-white text-lg py-3 px-4 rounded-full text-center shadow-md button-transition">শিক্ষক প্রবেশ</button>
+                <button id="btn-current-classes" class="btn-primary text-white text-lg py-3 px-4 rounded-full text-center shadow-md button-transition">এই পিরিয়ডে ক্লাস চলছে</button>
+                <button id="btn-next-classes" class="btn-primary text-white text-lg py-3 px-4 rounded-full text-center shadow-md button-transition">পরবর্তী পিরিয়ডে ক্লাস চলবে</button>
+                <button id="btn-teacher-list" class="btn-primary text-white text-lg py-3 px-4 rounded-full text-center shadow-md button-transition">শিক্ষক-কর্মচারি তালিকা</button>
+                <button id="btn-on-leave" class="btn-primary text-white text-lg py-3 px-4 rounded-full text-center shadow-md button-transition">ছুটিতে আছেন যারা</button>
+                <button id="btn-monitor-role" class="btn-accent text-white text-lg py-3 px-4 rounded-full text-center shadow-md button-transition">আপনার মনিটর ভূমিকা</button>
+                <button id="btn-monitoring-report" class="btn-primary text-white text-lg py-3 px-4 rounded-full text-center shadow-md button-transition">মনিটরিং রিপোর্ট</button>
+            </div>
+        </div>
+        
+        <!-- ================================== -->
+        <!--        Monitor Section             -->
+        <!-- ================================== -->
+        <div id="monitor-section" class="hidden">
+            <h3 class="text-2xl font-bold text-teal-700 mt-4 mb-6 text-center">ক্লাস মনিটর করুন</h3>
+                                    
+            <!-- New Duty Roster Table -->
+            <h4 class="text-xl font-bold text-gray-800 mt-4 mb-2 text-center">আজকের ডিউটি তালিকা</h4>
+            <div id="duty-roster-container" class="mb-6 bg-white p-3 rounded-lg shadow-inner">
+                <p class="text-center text-gray-500">ডিউটি তালিকা লোড হচ্ছে...</p>
+            </div>
+
+            <h4 class="text-xl font-bold text-gray-800 mt-8 mb-2 text-center">আজকের মনিটরগণ</h4>
+            <div id="monitor-instruction-container" class="mb-4 bg-gray-100 border border-gray-300 p-4 rounded-lg text-black hidden"></div>
+            <div id="monitor-team-list" class="space-y-4"><p class="text-center text-gray-500">আজকের মনিটর তালিকা লোড হচ্ছে...</p></div>
+            <button class="btn-primary text-white py-2 px-4 rounded-full mt-6 mx-auto block button-transition btn-back" data-target="main-section">ফিরে যান</button>
+        </div>
+
+        <!-- ================================== -->
+        <!--  Teacher Entry Section (Profile) -->
+        <!-- ================================== -->
+        <div id="teacher-entry-section" class="hidden">
+            <h3 class="text-2xl font-bold text-teal-700 mt-4 mb-6 text-center">আপনার প্রোফাইল</h3>
+            <div id="profile-info" class="bg-white p-6 rounded-xl shadow-md flex flex-col items-center space-y-3">
+                <!-- Profile content is rendered here by JS -->
+            </div>
+            
+            <div class="space-y-3 mt-4">
+                <button id="leave-request-button" class="w-full btn-accent-light text-white py-3 px-4 rounded-[20px] shadow-md text-lg text-center button-transition">
+                        ছুটিতে থাকলে জানান
+                </button>
+                <!-- NEW BUTTON FOR LEAVE CARD -->
+                <button id="btn-view-leave-card" class="w-full btn-accent-light text-white py-3 px-4 rounded-[20px] shadow-md text-lg text-center button-transition">
+                    ভোগকৃত ছুটির তথ্য দেখুন
+                </button>
+                <div class="relative">
+                    <button id="submit-attendance-button" class="w-full btn-accent-light text-white py-3 px-4 rounded-[20px] shadow-md text-lg text-center button-transition">
+                        শিক্ষার্থী হাজিরা জমা দিন
+                    </button>
+                    <div id="attendance-dropdown" class="hidden absolute w-full bg-white rounded-lg shadow-lg mt-1 z-10 border">
+                        <a href="#" id="own-class-attendance-btn" class="block px-4 py-3 text-gray-800 hover:bg-gray-100">আপনার ক্লাসে শিক্ষার্থী হাজিরা</a>
+                        <a href="#" id="other-class-attendance-btn" class="block px-4 py-3 text-gray-800 hover:bg-gray-100">অন্য ক্লাসে শিক্ষার্থী হাজিরা</a>
+                    </div>
+                </div>
+                <div id="teacher-routine-section">
+                    <button id="toggle-classes-btn" class="w-full btn-accent-light text-white py-3 px-4 rounded-[20px] shadow-md text-lg text-center">আপনার আজকের ক্লাস</button>
+                    <div id="your-classes-collapsible-container" class="collapsible-content">
+                        <div id="your-classes-container" class="space-y-4 mt-3">
+                            <!-- ক্লাস কার্ড এখানে আসবে -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="mss-to-teachers-container" class="mt-6 bg-indigo-50 border border-indigo-200 p-4 rounded-lg text-indigo-800 hidden"></div>
+
+            <button class="btn-primary text-white py-2 px-4 rounded-full mt-6 mx-auto block button-transition btn-back" data-target="main-section">ফিরে যান</button>
+            
+        </div>
+
+        <!-- ================================== -->
+        <!--      Current Classes Section       -->
+        <!-- ================================== -->
+        <div id="current-classes-section" class="hidden">
+            <h3 class="text-2xl font-bold text-teal-700 mt-4 mb-2 text-center">একনজরে চলমান ক্লাসসমূহ</h3>
+            <img src="https://i.imgur.com/a7FaWO1.jpg" alt="লোগো" class="w-[80px] h-[80px] mx-auto mb-4 rounded-full">
+            <div class="mb-6">
+                <button id="show-attendance-report-btn" class="w-full bg-green-600 hover:bg-green-700 text-white text-lg py-3 px-4 rounded-full text-center shadow-md button-transition">
+                    শিক্ষার্থী হাজিরা রিপোর্ট
+                </button>
+            </div>
+            <div id="current-status-info" class="text-center space-y-2 mb-6 text-md text-gray-700">
+                <p><strong>এখন চলছে:</strong> <span id="current-period-name" class="font-normal text-black"></span></p>
+                <p><strong>সময়কাল:</strong> <span id="current-period-time" class="font-normal text-black"></span></p>
+            </div>
+            <div id="current-classes-container" class="space-y-4"><p class="text-center text-gray-500">এখন কোনো ক্লাস চলছে না।</p></div>
+            
+            <div class="mt-8">
+                <button id="toggle-off-teachers-btn" class="w-full btn-brown text-white text-lg py-3 px-4 rounded-full text-center shadow-md button-transition">
+                    এখন যাদের অফ পিরিয়ড
+                </button>
+                <div id="off-teachers-list" class="space-y-4 mt-4 hidden">
+                    <!-- Off-period teacher list will be rendered here -->
+                </div>
+            </div>
+
+            <button class="btn-primary text-white py-2 px-4 rounded-full mt-6 mx-auto block button-transition btn-back" data-target="main-section">ফিরে যান</button>
+        </div>
+
+        <!-- ================================== -->
+        <!--        Next Classes Section        -->
+        <!-- ================================== -->
+        <div id="next-classes-section" class="hidden">
+              <h3 class="text-2xl font-bold text-teal-700 mt-4 mb-6 text-center">একনজরে পরবর্তী ক্লাসসমূহ</h3>
+              <div id="next-period-status" class="text-center space-y-2 mb-6 text-md text-gray-700">
+                <p><strong>পরবর্তী পিরিয়ড:</strong> <span id="next-period-name" class="font-normal text-black"></span></p>
+                <p><strong>সময়কাল:</strong> <span id="next-period-time" class="font-normal text-black"></span></p>
+            </div>
+            <div id="next-classes-container" class="space-y-4"><p class="text-center text-gray-500">এখন কোনো ক্লাস চলছে না।</p></div>
+            <button class="btn-primary text-white py-2 px-4 rounded-full mt-6 mx-auto block button-transition btn-back" data-target="main-section">ফিরে যান</button>
+        </div>
+
+        <!-- ================================== -->
+        <!--       Teacher List Section         -->
+        <!-- ================================== -->
+        <div id="teacher-list-section" class="hidden">
+              <h3 class="text-2xl font-bold text-teal-700 mt-4 mb-6 text-center">শিক্ষক-কর্মচারি তালিকা</h3>
+               <div class="mb-4">
+                   <select id="teacher-filter-select" class="w-full p-3 rounded-lg text-center bg-white border">
+                       <option value="all">স্তর বাছাই করুন</option>
+                       <option value="ebtedayi">এবতেদায়ি</option>
+                       <option value="dakhil">দাখিল</option>
+                       <option value="alim">আলিম</option>
+                       <option value="fazil">ফাযিল</option>
+                       <option value="grade3">কর্মচারি ৩য় গ্রেড</option>
+                       <option value="grade4">কর্মচারি ৪র্থ গ্রেড</option>
+                   </select>
+            </div>
+            <div id="teacher-list-container" class="space-y-4 pb-20"><p class="text-center text-gray-500">লোড হচ্ছে...</p></div>
+            <!-- Floating Button -->
+            <div class="sticky bottom-6 w-full text-center">
+                <button class="btn-primary text-white py-2 px-8 rounded-full shadow-lg button-transition btn-back" data-target="main-section">ফিরে যান</button>
+            </div>
+        </div>
+
+        <!-- ================================== -->
+        <!--     On Leave Teachers Section      -->
+        <!-- ================================== -->
+        <div id="on-leave-teachers-section" class="hidden">
+              <h3 class="text-2xl font-bold text-teal-700 mt-4 mb-6 text-center">ছুটিতে আছেন যারা</h3>
+            <div id="leave-message-container" class="mb-4 bg-green-50 border border-green-200 p-4 rounded-lg text-green-800 hidden"></div>
+            <div id="on-leave-teachers-container" class="space-y-4"><p class="text-center text-gray-500">লোড হচ্ছে...</p></div>
+            <button class="btn-primary text-white py-2 px-4 rounded-full mt-6 mx-auto block button-transition btn-back" data-target="main-section">ফিরে যান</button>
+        </div>
+
+        <!-- ================================== -->
+        <!--     Monitoring Report Section      -->
+        <!-- ================================== -->
+        <div id="monitoring-report-section" class="hidden">
+            <h3 class="text-2xl font-bold text-teal-700 mt-4 text-center">মনিটরিং রিপোর্ট</h3>
+            <div class="marquee-container bg-teal-50 border-y border-teal-200 p-2 my-4 rounded-lg overflow-hidden whitespace-nowrap">
+                <span class="marquee-text text-black" style="font-size: 1.03em;">"পড় তোমার প্রতিপালকের নামে, যিনি সৃষ্টি করেছেন।" (সুরা আলাক, আয়াত-১)। ~~~ "নিশ্চয়ই আমাকে শিক্ষক হিসেবে পাঠানো হয়েছে" (সুনান ইবনে মাজাহ, হাদিস: ২২৯)। ~~~ "তোমরা জ্ঞান অর্জন করো এবং যার নিকট থেকে জ্ঞান অর্জন করো, তাকে সম্মান করো।" (আল-মুজামুল আওসাত, হাদিস ৬১৮৪)। ~~~ "শিক্ষক শুধু একজন পেশাজীবী নন - তিনি জাতি গড়ার কারিগর।" (প্রচলিত বাণী চিরন্তণী)। ~~~ "শিক্ষক হলেন পরিচালক ও নির্দেশক। তিনি নৌকাটি চালিয়ে যান, কিন্তু চালিকাশক্তির উৎস হল শিক্ষার্থী।" (জন ডিউই, মার্কিন দার্শনিক ও শিক্ষা সংস্কারক)।</span>
+            </div>
+            
+            <!-- পরিবর্তিত: শুধু তারিখ বাছাই সেকশন -->
+            <div class="my-4 p-3 bg-gray-200 rounded-lg text-center">
+                <label for="report-date-picker" class="block text-sm font-medium text-gray-700 mb-1">রিপোর্টের তারিখ পরিবর্তন করুন:</label>
+                <input type="date" id="report-date-picker" class="p-2 border rounded-md w-full shadow-sm">
+                <button id="btn-view-report" class="mt-3 w-full btn-accent text-white py-2 px-4 rounded-full button-transition shadow-md">রিপোর্ট দেখুন</button>
+            </div>
+
+            <!-- রিপোর্ট কন্টেইনার -->
+            <div id="monitoring-report-container" class="space-y-4">
+                <p class="text-center text-gray-500">রিপোর্ট লোড হচ্ছে...</p>
+            </div>
+            <button class="btn-primary text-white py-2 px-4 rounded-full mt-6 mx-auto block button-transition btn-back" data-target="main-section">ফিরে যান</button>
+        </div>
+        
+        <!-- ================================== -->
+        <!--                Modals                -->
+        <!-- ================================== -->
+        
+        <!-- Password Login Modal -->
+        <div id="password-login-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
+            <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
+                <h3 class="text-xl text-teal-700 mb-4 text-center">প্রবেশ করুন</h3>
+                <form id="password-login-form">
+                    <input type="password" id="login-password-input" class="w-full p-3 rounded-lg text-center border" placeholder="আপনার পাসওয়ার্ড দিন" required>
+                    <div class="mt-6 flex justify-end space-x-4">
+                        <button type="button" id="cancel-password-login" class="btn-neutral text-white px-6 py-2 rounded-lg">বাতিল</button>
+                        <button type="submit" id="password-login-btn" class="btn-accent-light text-white px-6 py-2 rounded-lg flex items-center justify-center">
+                            <span id="password-login-btn-text">প্রবেশ</span>
+                            <div id="password-login-spinner" class="spinner ml-2 hidden"></div>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Status Modal -->
+        <div id="status-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-60 p-4">
+            <div class="bg-white p-6 rounded-lg shadow-xl text-center max-w-sm w-full">
+                <h4 id="status-modal-title" class="text-lg font-bold mb-4"></h4>
+                <p id="status-modal-message" class="text-gray-700"></p>
+                <button id="status-modal-ok" class="mt-6 btn-accent-light text-white py-2 px-4 rounded-lg">ঠিক আছে</button>
+            </div>
+        </div>
+
+        <!-- Logout Confirmation Modal -->
+          <div id="logout-confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
+            <div class="bg-white p-6 rounded-lg shadow-xl text-center max-w-sm w-full">
+                <h4 class="text-lg font-bold mb-4">লগ আউট নিশ্চিত করুন</h4>
+                <p class="text-gray-700 mb-4">আপনি কি নিশ্চিতভাবে লগ আউট করতে চান?</p>
+                <div class="mt-6 flex justify-center space-x-4">
+                    <button id="confirm-logout-btn" class="btn-danger-confirm text-white py-2 px-6 rounded-full">নিশ্চিত করুন</button>
+                    <button id="cancel-logout-btn" class="btn-neutral-light py-2 px-6 rounded-full">বাতিল</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Leave Request Modal -->
+        <div id="leave-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
+            <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
+                <h3 class="text-xl text-teal-700 mb-4 text-center">ছুটির তথ্য</h3>
+                <form id="leave-form" class="space-y-4">
+                    <div>
+                        <label for="leave-start-date" class="block text-sm font-medium text-gray-700 text-left">ছুটি শুরু</label>
+                        <input type="date" id="leave-start-date" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm" required>
+                    </div>
+                    <div>
+                        <label for="leave-end-date" class="block text-sm font-medium text-gray-700 text-left">ছুটি শেষ</label>
+                        <input type="date" id="leave-end-date" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm" required>
+                    </div>
+                    <div>
+                        <label for="leave-type" class="block text-sm font-medium text-gray-700 text-left">ছুটির ধরন</label>
+                        <select id="leave-type" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm" required>
+                            <option value="" disabled selected>ছুটির ধরন নির্বাচন করুন</option>
+                            <option value="নৈমিত্তিক">নৈমিত্তিক</option>
+                            <option value="অসুস্থতাজনিত">অসুস্থতাজনিত</option>
+                            <option value="প্রশিক্ষণ">প্রশিক্ষণ</option>
+                            <option value="উত্তরপত্র গ্রহণ">উত্তরপত্র গ্রহণ</option>
+                            <option value="সরকারি কাজ">সরকারি কাজ</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="leave-comment" class="block text-sm font-medium text-gray-700 text-left">মন্তব্য (বদলি শিক্ষকের নাম সহ)</label>
+                        <textarea id="leave-comment" rows="2" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm"></textarea>
+                    </div>
+                    <div class="mt-6 flex justify-end space-x-4">
+                        <button type="button" id="cancel-leave-button" class="btn-neutral text-white px-6 py-2 rounded-lg">বাতিল</button>
+                        <button type="submit" id="submit-leave-button" class="btn-accent-light text-white px-6 py-2 rounded-lg">জমা দিন</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- NEW LEAVE CARD MODAL -->
+        <div id="leave-card-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-60 p-4">
+            <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
+                <div id="leave-card-content-wrapper">
+                    <!-- Card content will be rendered here by JS -->
+                </div>
+                <div id="leave-card-download-buttons" class="flex justify-center items-center space-x-2 mt-4">
+                    <button id="download-html-card-btn" class="py-2 px-3 text-sm rounded-md text-white bg-green-600 hover:bg-green-700">ওয়েব</button>
+                    <button id="download-doc-card-btn" class="py-2 px-3 text-sm rounded-md text-white bg-purple-600 hover:bg-purple-700">ডক</button>
+                    <button id="download-image-card-btn" class="py-2 px-3 text-sm rounded-md text-white bg-blue-600 hover:bg-blue-700">ইমেজ</button>
+                </div>
+                 <button id="close-leave-card-modal" class="w-full mt-4 btn-neutral text-white px-6 py-2 rounded-lg">বন্ধ করুন</button>
+            </div>
+        </div>
+
+        <!-- Attendance Modals -->
+        <div id="own-attendance-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
+              <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
+                <h3 class="text-xl text-teal-700 mb-4 text-center">আপনার ক্লাসে শিক্ষার্থী হাজিরা</h3>
+                <form id="own-attendance-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 text-left">শ্রেণি</label>
+                        <input type="text" id="own-class-name" class="mt-1 block w-full p-2 border bg-gray-200 rounded-md" readonly>
+                    </div>
+                    <div>
+                        <label for="own-class-present" class="block text-sm font-medium text-gray-700 text-left">উপস্থিতি</label>
+                        <input type="number" id="own-class-present" class="mt-1 block w-full p-2 border rounded-md" required>
+                    </div>
+                     <div>
+                        <label class="block text-sm font-medium text-gray-700 text-left">শিক্ষকের নাম</label>
+                        <input type="text" id="own-class-teacher-name" class="mt-1 block w-full p-2 border bg-gray-200 rounded-md" readonly>
+                    </div>
+                    <div class="mt-6 flex justify-end space-x-4">
+                        <button type="button" id="cancel-own-attendance-btn" class="btn-neutral text-white px-6 py-2 rounded-lg">বাতিল</button>
+                        <button type="submit" class="btn-accent-light text-white px-6 py-2 rounded-lg">জমা দিন</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div id="other-attendance-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
+              <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
+                <h3 class="text-xl text-teal-700 mb-4 text-center">অন্য ক্লাসে শিক্ষার্থী হাজিরা</h3>
+                <form id="other-attendance-form" class="space-y-4">
+                    <div>
+                        <label for="other-class-level" class="block text-sm font-medium text-gray-700 text-left">স্তর নির্বাচন করুন</label>
+                        <select id="other-class-level" class="mt-1 block w-full p-2 border rounded-md" required>
+                            <option value="" disabled selected>-- স্তর --</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="other-class-name" class="block text-sm font-medium text-gray-700 text-left">শ্রেণি নির্বাচন করুন</label>
+                        <select id="other-class-name" class="mt-1 block w-full p-2 border rounded-md" required disabled>
+                            <option value="" disabled selected>-- শ্রেণি --</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="other-class-present" class="block text-sm font-medium text-gray-700 text-left">উপস্থিতি</label>
+                        <input type="number" id="other-class-present" class="mt-1 block w-full p-2 border rounded-md" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 text-left">শিক্ষকের নাম</label>
+                        <input type="text" id="other-class-teacher-name" class="mt-1 block w-full p-2 border bg-gray-200 rounded-md" readonly>
+                    </div>
+                    <div class="mt-6 flex justify-end space-x-4">
+                        <button type="button" id="cancel-other-attendance-btn" class="btn-neutral text-white px-6 py-2 rounded-lg">বন্ধ করুন</button>
+                        <button type="button" id="save-other-attendance-btn" class="btn-primary text-white px-6 py-2 rounded-lg">সেভ করুন</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Monitor Password Modal -->
+        <div id="monitor-password-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
+            <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
+                <h3 class="text-xl text-teal-700 mb-4 text-center">মনিটর যাচাই</h3>
+                <p class="text-center text-gray-600 mb-4">আপনার পরিচয় নিশ্চিত করতে পাসওয়ার্ড দিন।</p>
+                <form id="monitor-password-form">
+                    <input type="hidden" id="monitor-index-input">
+                    <input type="password" id="monitor-password-input" class="w-full p-3 rounded-lg text-center border" placeholder="আপনার পাসওয়ার্ড দিন" required>
+                    <div class="mt-6 flex justify-end space-x-4">
+                        <button type="button" id="cancel-monitor-password" class="btn-neutral text-white px-6 py-2 rounded-lg">বাতিল</button>
+                        <button type="submit" id="monitor-login-btn" class="btn-accent-light text-white px-6 py-2 rounded-lg flex items-center justify-center">
+                            <span id="monitor-login-btn-text">প্রবেশ</span>
+                            <div id="monitor-login-spinner" class="spinner ml-2 hidden"></div>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Monitor Report Form Modal -->
+        <div id="monitor-form-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
+            <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
+                <h3 class="text-xl text-teal-700 mb-4 text-center">মনিটর ফর্ম</h3>
+                <div id="monitor-form-status-message" class="mb-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-3 rounded-md text-center hidden">
+                    <!-- Message will be inserted here by JS -->
+                </div>
+                <form id="monitor-form" class="space-y-4 text-left">
+                    <input type="hidden" id="monitor-form-index">
+                    <input type="hidden" id="monitor-form-period">
+                    <div>
+                        <label for="monitor-form-level" class="block text-sm font-medium text-gray-700">স্তর নির্বাচন করুন</label>
+                        <select id="monitor-form-level" class="mt-1 block w-full p-2 border rounded-md" required>
+                            <option value="" disabled selected>-- স্তর --</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="monitor-form-class" class="block text-sm font-medium text-gray-700">শ্রেণি নির্বাচন করুন</label>
+                        <select id="monitor-form-class" class="mt-1 block w-full p-2 border rounded-md" required disabled>
+                            <option value="" disabled selected>-- শ্রেণি --</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">ক্লাসের শিক্ষক</label>
+                        <!-- START: FEATURE 2 HTML CHANGE -->
+                        <input type="text" id="monitor-form-teacher" class="mt-1 block w-full p-2 border bg-white rounded-md">
+                        <select id="monitor-form-teacher-select" class="hidden mt-1 w-full p-2 border rounded-md bg-white">
+                            <!-- Options will be added by JS -->
+                        </select>
+                        <!-- END: FEATURE 2 HTML CHANGE -->
+                    </div>
+                    <div>
+                        <label for="monitor-form-attendance" class="block text-sm font-medium text-gray-700">শিক্ষার্থী উপস্থিতি</label>
+                        <input type="number" id="monitor-form-attendance" class="mt-1 block w-full p-2 border rounded-md" required placeholder="উপস্থিত শিক্ষার্থীর সংখ্যা">
+                    </div>
+                    <div>
+                             <label class="block text-sm font-medium text-gray-700 mb-2">রিপোর্ট</label>
+                             <div class="space-y-2">
+                                 <div class="flex items-center">
+                                     <input type="checkbox" id="report-ok" class="h-4 w-4">
+                                     <label for="report-ok" class="ml-2 text-gray-800">ঠিক আছে</label>
+                                 </div>
+                                 <div class="flex items-center">
+                                     <input type="checkbox" id="report-no-students" class="h-4 w-4">
+                                     <label for="report-no-students" class="ml-2 text-gray-800">শিক্ষার্থী নেই</label>
+                                 </div>
+                                 <div class="flex items-center">
+                                     <input type="checkbox" id="report-absent" class="h-4 w-4">
+                                     <label for="report-absent" class="ml-2 text-gray-800">শিক্ষক অনুপস্থিত</label>
+                                 </div>
+                                 <div class="flex items-center space-x-2">
+                                     <input type="checkbox" id="report-late" class="h-4 w-4">
+                                     <input type="number" id="report-late-min" class="w-16 p-1 border rounded-md text-center" placeholder="মিনিট">
+                                     <label for="report-late" class="text-gray-800">মিনিট পরে প্রবেশ</label>
+                                 </div>
+                                 <div class="flex items-center space-x-2">
+                                     <input type="checkbox" id="report-early" class="h-4 w-4">
+                                     <input type="number" id="report-early-min" class="w-16 p-1 border rounded-md text-center" placeholder="মিনিট">
+                                     <label for="report-early" class="text-gray-800">মিনিট আগে প্রস্থান</label>
+                                 </div>
+                                 <div class="flex items-start space-x-2 pt-2">
+                                     <input type="checkbox" id="report-extra-info" class="h-4 w-4 mt-1">
+                                     <label for="report-extra-info" class="text-gray-800">আরও তথ্য:</label>
+                                     <textarea id="report-extra-info-text" rows="2" class="w-full p-1 border rounded-md" placeholder="এখানে লিখুন..."></textarea>
+                                   </div>
+                             </div>
+                    </div>
+                    <div class="mt-6 flex justify-end space-x-2">
+                        <button type="button" id="cancel-monitor-form" class="btn-neutral text-white px-4 py-2 rounded-lg">বন্ধ করুন</button>
+                        <button type="button" id="save-monitor-form" class="btn-primary text-white px-4 py-2 rounded-lg">সেভ করুন</button>
+                        <button type="submit" id="monitor-submit-btn" class="btn-accent-light text-white px-4 py-2 rounded-lg flex items-center justify-center">
+                            <span id="monitor-submit-btn-text">জমা দিন</span>
+                            <div id="monitor-submit-spinner" class="spinner ml-2 hidden"></div>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Report Password Modal -->
+        <div id="report-password-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
+            <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
+                <h3 class="text-xl text-teal-700 mb-4 text-center">রিপোর্ট দেখুন</h3>
+                <p class="text-center text-gray-600 mb-4">রিপোর্টটি দেখতে অনুগ্রহ করে পাসওয়ার্ড দিন।</p>
+                <form id="report-password-form">
+                    <input type="password" id="report-password-input" class="w-full p-3 rounded-lg text-center border" placeholder="আপনার পাসওয়ার্ড দিন" required>
+                    <div class="mt-6 flex justify-end space-x-4">
+                        <button type="button" id="cancel-report-password" class="btn-neutral text-white px-6 py-2 rounded-lg">বাতিল</button>
+                        <button type="submit" class="btn-accent-light text-white px-6 py-2 rounded-lg">দেখুন</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Attendance Report Modal (Container for reports, buttons are dynamic) -->
+        <div id="attendance-report-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
+            <div id="attendance-report-container" class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md relative">
+                <!-- Buttons are now inside the dynamically generated report to be part of the content -->
+                <div id="attendance-report-content" class="bg-white">
+                    <!-- Report content will be rendered here by JS -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Address Modal -->
+        <div id="address-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
+            <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm text-center">
+                <h4 class="text-lg font-bold text-teal-700 mb-4">বর্তমান ঠিকানা</h4>
+                <p id="address-content" class="text-gray-700 mb-6"></p>
+                <button id="close-address-modal" class="btn-neutral text-white py-2 px-4 rounded-full">বন্ধ করুন</button>
+            </div>
+        </div>
+
+        <!-- Download Options Modal -->
+        <div id="download-options-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
+            <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm text-center">
+                <h4 class="text-lg font-bold text-teal-700 mb-6">কোন ফরম্যাটে ডাউনলোড করবেন?</h4>
+                <div class="flex flex-col space-y-3">
+                    <button id="download-as-html" class="btn-accent text-white py-2 px-6 rounded-full button-transition">HTML (মোবাইলের জন্য)</button>
+                    <button id="download-as-doc" class="btn-primary text-white py-2 px-6 rounded-full button-transition">ডক (MS Word)</button>
+                    <button id="download-as-image" class="btn-neutral-light py-2 px-6 rounded-full button-transition">ইমেজ (PNG)</button>
+                </div>
+                <button id="cancel-download" class="mt-6 text-gray-600 hover:underline">বাতিল</button>
+            </div>
+        </div>
+        
+        <!-- Photo Modal -->
+        <div id="photo-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
+            <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm text-center">
+                <div id="photo-modal-image" class="w-32 h-32 rounded-full border-4 border-teal-200 overflow-hidden bg-gray-200 mx-auto mb-4" style="background-size: cover; background-position: center;">
+                    <!-- Image will be set as background -->
+                </div>
+                <h4 id="photo-modal-name" class="text-xl font-bold text-gray-800"></h4>
+                <p id="photo-modal-designation" class="text-md text-purple-700 mb-6"></p>
+                <button id="close-photo-modal" class="btn-primary text-white py-2 px-6 rounded-full">বন্ধ করুন</button>
+            </div>
+        </div>
+        
+        <!-- === NEW: Reassign Duty Modal === -->
+        <div id="reassign-duty-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
+            <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
+                <h3 class="text-xl text-teal-700 mb-4 text-center">ডিউটি পুনর্বণ্টন করুন</h3>
+                <form id="reassign-duty-form" class="space-y-4 text-left">
+                    <input type="hidden" id="reassign-period">
+                    <input type="hidden" id="reassign-original-monitor-index">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">পিরিয়ড</label>
+                        <p id="reassign-period-text" class="mt-1 p-2 bg-gray-100 rounded-md"></p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">বর্তমান মনিটর</label>
+                        <p id="reassign-original-monitor-text" class="mt-1 p-2 bg-gray-100 rounded-md"></p>
+                    </div>
+                    <div>
+                        <label for="reassign-new-monitor-select" class="block text-sm font-medium text-gray-700">নতুন মনিটর নির্বাচন করুন</label>
+                        <select id="reassign-new-monitor-select" class="mt-1 block w-full p-2 border rounded-md" required>
+                            <!-- Options will be populated by JS -->
+                        </select>
+                    </div>
+                     <div>
+                        <label for="reassign-password" class="block text-sm font-medium text-gray-700">টিম প্রধানের পাসওয়ার্ড</label>
+                        <input type="password" id="reassign-password" class="mt-1 block w-full p-2 border rounded-md" placeholder="পাসওয়ার্ড দিন" required>
+                    </div>
+                    <div class="mt-6 flex justify-end space-x-4">
+                        <button type="button" id="cancel-reassign-btn" class="btn-neutral text-white px-6 py-2 rounded-lg">বাতিল</button>
+                        <button type="submit" class="btn-accent-light text-white px-6 py-2 rounded-lg">নিশ্চিত করুন</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- নতুন লোডিং স্পিনার HTML এখানে যুক্ত করা হয়েছে -->
+<div id="loadingSection" class="loading-container hidden">
+    <div class="loading-spinner-wrapper">
+        <div class="loading-spinner"></div>
+        <div class="loading-logo">
+            <img src="https://i.imgur.com/a7FaWO1.jpg" alt="লোগো">
+        </div>
+    </div>
+    <div class="loading-text">তথ্য লোড হচ্ছে...</div>
+</div>
+    
+    <!-- === NEW: Floating Batch Submit Button === -->
+    <div id="batch-submit-container" class="hidden fixed bottom-4 right-4 z-50">
+        <button id="batch-submit-button" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-5 rounded-full shadow-lg flex items-center space-x-2 button-transition">
+            <span id="saved-reports-count" class="bg-white text-purple-600 rounded-full px-2 text-sm font-bold">0</span>
+            <span>সবগুলো জমা দিন</span>
+        </button>
+    </div>
+<div id="toast-notification" class="hidden fixed bottom-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-6 py-3 rounded-full shadow-lg z-[100]">
+        <!-- বার্তা এখানে দেখানো হবে -->
+    </div>
+
+    <script>
+        // Global state and constants
+        let lastCheckedPeriod = null;
+        let isDataLoaded = false;
+        let allData = {};
+        let loggedInTeacher = null;
+        let currentMonitor = null;
+        let reportToDownloadId = null; 
+        let reportFileName = 'report'; 
+        let reportAccessCallback = null;
+        let savedReports = [];
+        let dutyReassignmentInfo = {};
+
+        const webAppUrl = 'https://sfdm.xyz/api/api.php';
+        
+        // DOM Elements
+        const loadingSection = document.getElementById('loadingSection');
+        const downloadOptionsModal = document.getElementById('download-options-modal');
+
+
+        const classPeriods = [
+            { start: '10:15', end: '10:30', name: 'সমাবেশ ও প্রস্তুতি' }, { start: '10:30', end: '11:10', name: '১ম ঘণ্টা' },
+            { start: '11:10', end: '11:50', name: '২য় ঘণ্টা' }, { start: '11:50', end: '12:30', name: '৩য় ঘণ্টা' },
+            { start: '12:30', end: '13:10', name: '৪র্থ ঘণ্টা' }, { start: '13:10', end: '14:00', name: 'টিফিন' },
+            { start: '14:00', end: '14:30', name: '৫ম ঘণ্টা' }, { start: '14:30', end: '15:00', name: '৬ষ্ঠ ঘণ্টা' },
+            { start: '15:00', end: '15:30', name: '৭ম ঘণ্টা' }, { start: '15:30', end: '16:00', name: '৮ম ঘণ্টা' }
+        ];
+
+        const classStructure = {
+            'এবতেদায়ি': ['১ম শ্রেণি', '২য় শ্রেণি', '৩য় শ্রেণি', '৪র্থ শ্রেণি', '৫ম শ্রেণি'],
+            'দাখিল': ['৬ষ্ঠ শ্রেণি', '৭ম শ্রেণি', '৮ম শ্রেণি', '৯ম শ্রেণি', '১০ম শ্রেণি'],
+            'আলিম': ['আলিম ১ম বর্ষ', 'আলিম ২য় বর্ষ'],
+            'ফাযিল': ['ফাযিল ১ম বর্ষ', 'ফাযিল ২য় বর্ষ', 'ফাযিল ৩য় বর্ষ']
+        };
+        
+        const TEACHING_STAFF_DESIGNATIONS = [
+            'অধ্যক্ষ', 'সহঃ অধ্যাপক', 'প্রভাষক', 'এবতেদায়ি প্রধান',
+            'সহকারি শিক্ষক', 'এবতেদায়ি শিক্ষক', 'সহকারি মৌলভী',
+            'এবতেদায়ি (ক্বারী)', 'কম্পিউটার', 'শারীরিক শিক্ষা',
+            'লাইব্রেরিয়ান', 'ল্যাব সহকারী'
+        ];
+
+        const fullClassList = [].concat(...Object.values(classStructure));
+
+
+        // --- UTILITY FUNCTIONS ---
+        
+        function toBengaliNumber(en) {
+            if (en === undefined || en === null || en === 'N/A' || en === '') return 'তথ্য নেই';
+            return String(en).replace(/\d/g, d => '০১২৩৪৫৬৭৮৯' [d]);
+        }
+        
+        function formatMyDate(date) {
+            if (!date) return '';
+            let d = new Date(date);
+            if (isNaN(d.getTime())) return '';
+            
+            let day = String(d.getDate()).padStart(2, '0');
+            let month = String(d.getMonth() + 1).padStart(2, '0');
+            let year = String(d.getFullYear()).slice(-2);
+
+            return toBengaliNumber(`${day}/${month}/${year}`);
+        }
+
+        function formatTime(timeStr) {
+            if (!timeStr) return '';
+            const [h, m] = timeStr.split(':').map(Number);
+            const period = h < 5 ? 'রাত' : h < 12 ? 'সকাল' : h < 14 ? 'দুপুর' : h < 17 ? 'বিকাল' : h < 19 ? 'সন্ধ্যা' : 'রাত';
+            return `${period} ${toBengaliNumber(h % 12 || 12)}:${toBengaliNumber(String(m).padStart(2, '0'))}`;
+        };
+        
+        function parseClientDate(dateInput) {
+            if (!dateInput) return null;
+            if (dateInput instanceof Date && !isNaN(dateInput)) return dateInput;
+
+            if (typeof dateInput === 'string' && dateInput.includes('/')) {
+                const parts = dateInput.split('/');
+                if (parts.length === 3) {
+                    const day = parseInt(parts[0], 10);
+                    const month = parseInt(parts[1], 10) - 1;
+                    const year = parseInt(parts[2], 10);
+                    const d = new Date(year, month, day);
+                    return (d && !isNaN(d.getTime())) ? d : null;
+                }
+            }
+            
+            const d = new Date(dateInput);
+            return isNaN(d.getTime()) ? null : d;
+        }
+
+        function getCurrentPeriod(date) {
+            const currentTotalMinutes = date.getHours() * 60 + date.getMinutes();
+            for (const period of classPeriods) {
+                const [startHour, startMinute] = period.start.split(':').map(Number);
+                const [endHour, endMinute] = period.end.split(':').map(Number);
+                if (currentTotalMinutes >= (startHour * 60 + startMinute) && currentTotalMinutes < (endHour * 60 + endMinute)) {
+                    return period;
+                }
+            }
+            return null;
+        }
+        
+        function getAttendancePeriodContext() {
+            const now = new Date();
+            const currentHour = now.getHours();
+            const currentMinute = now.getMinutes();
+            const currentTime = currentHour + (currentMinute / 60);
+
+            const firstPeriodStart = 10.5; // 10:30 AM
+            const firstPeriodEnd = 13.0;   // 1:00 PM
+            const fifthPeriodStart = 14.0; // 2:00 PM
+            const fifthPeriodEnd = 15.5;   // 3:30 PM
+
+            if (currentTime >= firstPeriodStart && currentTime < firstPeriodEnd) {
+                return { periodName: '১ম ঘণ্টা', isActive: true };
+            } else if (currentTime >= fifthPeriodStart && currentTime < fifthPeriodEnd) {
+                return { periodName: '৫ম ঘণ্টা', isActive: true };
+            } else {
+                return { periodName: null, isActive: false };
+            }
+        }
+
+        function showStatusModal(isSuccess, message, title) {
+            const modal = document.getElementById('status-modal');
+            const titleEl = modal.querySelector('#status-modal-title');
+            const msgEl = modal.querySelector('#status-modal-message');
+            titleEl.textContent = title || (isSuccess ? "সফল হয়েছে" : "ব্যর্থ হয়েছে");
+            let titleClass = isSuccess ? "text-green-600" : "text-red-600";
+            if (isSuccess === 'info') {
+                 titleClass = "text-yellow-600";
+                 titleEl.textContent = title || "দৃষ্টি আকর্ষণ";
+            }
+            titleEl.className = `text-lg font-bold mb-4 ${titleClass}`;
+            msgEl.innerHTML = message; // Use innerHTML to render potential error details
+            modal.classList.remove('hidden');
+        }
+
+        function showSection(e, id) {
+            if (e) e.preventDefault();
+            document.querySelectorAll('#app-container > div[id$="-section"]').forEach(s => {
+                s.classList.add('hidden');
+            });
+            const targetSection = document.getElementById(id);
+            if (targetSection) targetSection.classList.remove('hidden');
+        }
+
+        function animateAndNavigate(event, callback) {
+            if (event) event.preventDefault();
+            const button = event.currentTarget;
+            button.classList.add('button-animate');
+            setTimeout(() => {
+                if (typeof callback === 'function') {
+                    callback();
+                }
+                button.classList.remove('button-animate');
+            }, 200);
+        }
+
+		function showToast(message) {
+		    const toast = document.getElementById('toast-notification');
+		    if (!toast) return;
+
+		    toast.textContent = message;
+		    toast.classList.remove('hidden');
+
+		    setTimeout(() => {
+		        toast.classList.add('hidden');
+		    }, 1000); 
+		}
+
+
+        // --- DATA HANDLING (REFACTORED) ---
+        async function loadData(forceRefresh = false, showSpinner = true) {
+            const cacheKey = 'classMonitoringAppData_v2';
+            const cacheTimeKey = 'classMonitoringCacheTime_v2';
+            
+           // if (showSpinner) loadingSection.classList.remove('hidden');
+            
+            if (!forceRefresh) {
+                const cachedData = localStorage.getItem(cacheKey);
+                const cachedTime = localStorage.getItem(cacheTimeKey);
+                if (cachedData && cachedTime && (new Date().getTime() - cachedTime < 60000)) { 
+                    allData = JSON.parse(cachedData);
+                    renderAllComponents();
+                    if (showSpinner) loadingSection.classList.add('hidden');
+                    return;
+                }
+            }
+            
+            try {
+                const res = await fetch(`${webAppUrl}?action=get_all_data&v=${new Date().getTime()}`);
+                if (!res.ok) throw new Error(`সার্ভার থেকে সাড়া পাওয়া যায়নি। স্ট্যাটাস: ${res.status}`);
+                
+                const result = await res.json();
+                
+                if (result.status === 'success') {
+                    allData = result.data;
+                    localStorage.setItem(cacheKey, JSON.stringify(allData));
+                    localStorage.setItem(cacheTimeKey, new Date().getTime());
+                    isDataLoaded = true;
+                    renderAllComponents();
+                } else {
+                    // Show detailed error message from PHP
+                    throw new Error(result.message || 'সার্ভার একটি ত্রুটি পাঠিয়েছে।');
+                }
+            } catch (error) {
+                console.error('Fetch Error:', error);
+                const errorMessage = "ডেটা লোড করা যায়নি। অনুগ্রহ করে আপনার ইন্টারনেট সংযোগ পরীক্ষা করুন এবং পৃষ্ঠাটি পুনরায় লোড করুন। <br><br><small style='color:grey;'>Error: " + error.message + "</small>";
+                // showStatusModal(false, errorMessage, "সংযোগ ত্রুটি");
+            } finally {
+                if (showSpinner) loadingSection.classList.add('hidden');
+            }
+        }
+        
+        // --- CORE RENDERING & LOGIC ---
+        function renderAllComponents() {
+            renderTeacherList();
+            renderOnLeaveTeachers();
+            renderMonitoringReport();
+            renderSpecialMessages();
+            renderDutyRoster();
+            
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const currentPeriod = getCurrentPeriod(now);
+            
+            const [endH, endM] = classPeriods[classPeriods.length - 1].end.split(':').map(Number);
+            const schoolEndTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), endH, endM);
+
+            const generalHolidays = (allData.onLeave || []).filter(h => !h.IndexNo); // Using IndexNo to differentiate
+            let todaysSpecialHoliday = null;
+            let upcomingHolidayNotice = null;
+
+            for (const holiday of generalHolidays) {
+                const from = parseClientDate(holiday.LeaveStart); // Using LeaveStart from PHP
+                const to = parseClientDate(holiday.LeaveEnd);     // Using LeaveEnd from PHP
+                if (from && to && today >= from && today <= to) {
+                    todaysSpecialHoliday = holiday;
+                    break;
+                }
+            }
+
+            if (!todaysSpecialHoliday) {
+                const tomorrow = new Date(today);
+                tomorrow.setDate(today.getDate() + 1);
+                for (const holiday of generalHolidays) {
+                    const from = parseClientDate(holiday.LeaveStart);
+                    if (from && from.getTime() === tomorrow.getTime()) {
+                        if (now > schoolEndTime) {
+                            upcomingHolidayNotice = holiday;
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            const isFriday = now.getDay() === 5;
+            const isSaturday = now.getDay() === 6;
+            const isWeeklyHoliday = isFriday || isSaturday;
+
+            if (todaysSpecialHoliday) {
+                document.getElementById('main-buttons-container').classList.add('hidden');
+                document.getElementById('period-status-container').classList.add('hidden');
+                document.getElementById('off-time-status-container').classList.add('hidden');
+                const holidayContainer = document.getElementById('holiday-message');
+                holidayContainer.classList.remove('hidden');
+                holidayContainer.innerHTML = `
+                    <div class="p-4 rounded-lg bg-blue-50 text-blue-900 text-center space-y-2">
+                        <h4 class="text-xl font-bold">${todaysSpecialHoliday.LeaveType}</h4>
+                        <p><strong>সময়কাল:</strong> ${formatMyDate(todaysSpecialHoliday.LeaveStart)} থেকে ${formatMyDate(todaysSpecialHoliday.LeaveEnd)}</p>
+                        ${todaysSpecialHoliday.Comment ? `<p class="text-teal-700 font-semibold"><strong>কার্যক্রম:</strong> ${todaysSpecialHoliday.Comment}</p>` : ''}
+                    </div>
+                `;
+            }
+            else if (upcomingHolidayNotice) {
+                document.getElementById('main-buttons-container').classList.add('hidden');
+                document.getElementById('period-status-container').classList.add('hidden');
+                document.getElementById('off-time-status-container').classList.add('hidden');
+                const holidayContainer = document.getElementById('holiday-message');
+                holidayContainer.classList.remove('hidden');
+                holidayContainer.innerHTML = `<div class="font-bold text-center bg-amber-100 border-amber-400 border-t-4 p-4 rounded-b text-amber-900 shadow-lg" style="font-size: 1.03em;">
+                <strong>দৃষ্টি আকর্ষণ:</strong><br> আগামীকাল (${formatMyDate(upcomingHolidayNotice.LeaveStart)}) ${upcomingHolidayNotice.LeaveType}
+                </div>`;
+            }
+            else if (isWeeklyHoliday) {
+                document.getElementById('main-buttons-container').classList.add('hidden');
+                document.getElementById('period-status-container').classList.add('hidden');
+                document.getElementById('off-time-status-container').classList.add('hidden');
+                
+                const holidayContainer = document.getElementById('holiday-message');
+                holidayContainer.classList.remove('hidden');
+                let holidayHTML = '';
+                
+                const specialMessages = allData.specialMessages || {};
+
+                if (isFriday) {
+                    holidayHTML = `
+                        <div class="text-center space-y-4 bg-white p-4 rounded-lg">
+                            <h2 class="text-xl font-bold text-gray-800">শুক্রবার: সাপ্তাহিক ছুটি</h2>
+                            <img src="https://i.imgur.com/0nZCyOn.jpg" alt="জুম্মা মোবারক" class="mx-auto rounded-lg shadow-md">
+                            ${specialMessages.fridayMessage ? `<div class="bg-blue-50 border border-blue-200 text-blue-800 p-3 rounded-lg text-sm" style="font-size: 1.03em;">${specialMessages.fridayMessage}</div>` : ''}
+                        </div>
+                    `;
+                } else { // It's Saturday
+                    const nextDayInfo = getNextWorkingDayInfo();
+                    holidayHTML = `
+                        <div class="text-center space-y-4 bg-white p-4 rounded-lg">
+                            <h2 class="text-xl font-bold text-gray-800">শনিবার: সাপ্তাহিক ছুটি</h2>
+                            <img src="https://i.imgur.com/NMtDl2v.jpg" alt="সাপ্তাহিক ছুটি" class="mx-auto rounded-lg shadow-md">
+                            <p class="bg-gray-200 p-3 rounded-lg font-semibold">পরবর্তী ক্লাস শুরু ${nextDayInfo.date}, ${nextDayInfo.day} সকাল ${toBengaliNumber('10:30')} টায়</p>
+                            ${specialMessages.saturdayMessage ? `<div class="bg-yellow-50 border border-yellow-200 text-teal-800 p-3 rounded-lg text-sm" style="font-size: 1.03em;">${specialMessages.saturdayMessage}</div>` : ''}
+                        </div>
+                    `;
+                }
+                holidayContainer.innerHTML = holidayHTML;
+            }
+            else {
+                document.getElementById('main-buttons-container').classList.remove('hidden');
+                document.getElementById('holiday-message').classList.add('hidden');
+                if (currentPeriod) {
+                    document.getElementById('period-status-container').classList.remove('hidden');
+                    document.getElementById('off-time-status-container').classList.add('hidden');
+                    document.getElementById('period-status-text').textContent = currentPeriod.name;
+                    document.getElementById('current-status-info').classList.remove('hidden');
+                    document.getElementById('current-period-name').textContent = currentPeriod.name;
+                    document.getElementById('current-period-time').textContent = `${formatTime(currentPeriod.start)} থেকে ${formatTime(currentPeriod.end)}`;
+                    renderClasses(currentPeriod.name, 'current-classes-container');
+                    
+                    const currentPeriodIndex = classPeriods.findIndex(p => p.name === currentPeriod.name);
+                    const nextPeriod = classPeriods[currentPeriodIndex + 1];
+                    if (nextPeriod) {
+                        document.getElementById('next-period-status').classList.remove('hidden');
+                        document.getElementById('next-period-name').textContent = nextPeriod.name;
+                        document.getElementById('next-period-time').textContent = `${formatTime(nextPeriod.start)} থেকে ${formatTime(nextPeriod.end)}`;
+                        renderClasses(nextPeriod.name, 'next-classes-container');
+                    } else {
+                        document.getElementById('next-period-status').classList.add('hidden');
+                        document.getElementById('next-classes-container').innerHTML = '<p class="text-center text-gray-500 text-lg">এখন কোনো ক্লাস চলছে না।</p>';
+                    }
+                } else {
+                    document.getElementById('period-status-container').classList.add('hidden');
+                    document.getElementById('off-time-status-container').classList.remove('hidden');
+                    document.getElementById('off-time-text').textContent = getOffHoursMessage(now);
+                    document.getElementById('current-status-info').classList.add('hidden');
+                    document.getElementById('current-classes-container').innerHTML = '<p class="text-center text-gray-500 text-lg">এখন কোনো ক্লাস চলছে না।</p>';
+                    document.getElementById('next-period-status').classList.add('hidden');
+                    document.getElementById('next-classes-container').innerHTML = '<p class="text-center text-gray-500 text-lg">এখন কোনো ক্লাস চলছে না।</p>';
+                }
+            }
+        }
+        function getNextWorkingDayInfo(currentDate = new Date()) {
+            let nextDay = new Date(currentDate);
+            nextDay.setDate(nextDay.getDate() + 1);
+
+            while (true) {
+                const dayOfWeek = nextDay.getDay();
+                if (dayOfWeek !== 5 && dayOfWeek !== 6) {
+                    const isSpecialHoliday = (allData.onLeave || []).some(h => {
+                        if (!h.LeaveStart || !h.LeaveEnd || h.IndexNo) return false;
+                        const from = parseClientDate(h.LeaveStart);
+                        const to = parseClientDate(h.LeaveEnd);
+                        const checkDate = new Date(nextDay.getFullYear(), nextDay.getMonth(), nextDay.getDate());
+                        return from && to && checkDate >= from && checkDate <= to;
+                    });
+
+                    if (!isSpecialHoliday) {
+                        break;
+                    }
+                }
+                nextDay.setDate(nextDay.getDate() + 1);
+            }
+            
+            return {
+                date: new Intl.DateTimeFormat('bn-BD', { day: 'numeric', month: 'long' }).format(nextDay),
+                day: new Intl.DateTimeFormat('bn-BD', { weekday: 'long' }).format(nextDay)
+            };
+        }
+
+
+        function getOffHoursMessage(now) {
+            const firstClassStart = classPeriods.find(p => p.name.includes('ঘণ্টা')).start.split(':');
+            const firstClassTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), parseInt(firstClassStart[0]), parseInt(firstClassStart[1]));
+
+            let message = '';
+            if (now < firstClassTime) {
+                 message = `ক্লাস শুরু: আজ, সকাল ${toBengaliNumber('10:30')} টায়`;
+            } else {
+                const nextWorkDay = getNextWorkingDayInfo(now);
+                message = `ক্লাস শুরু: ${nextWorkDay.date}, ${nextWorkDay.day} সকাল ${toBengaliNumber('10:30')} টায়`;
+            }
+            return message;
+        };
+
+        function updateDateTimeAndClasses() {
+            const now = new Date();
+            const dayOptions = { weekday: 'long', timeZone: 'Asia/Dhaka' };
+            
+            document.getElementById('current-date').textContent = formatMyDate(now);
+            document.getElementById('current-day').textContent = new Intl.DateTimeFormat('bn-BD', dayOptions).format(now);
+            document.getElementById('current-time').textContent = formatTime(`${now.getHours()}:${now.getMinutes()}`);
+
+            const currentPeriod = getCurrentPeriod(now);
+            const currentPeriodName = currentPeriod ? currentPeriod.name : 'Off-Time';
+
+            if (isDataLoaded && lastCheckedPeriod !== currentPeriodName) {
+                renderAllComponents(); 
+                lastCheckedPeriod = currentPeriodName;
+            }
+        }
+
+        function renderClasses(periodName, containerId) {
+            const container = document.getElementById(containerId);
+            const periodClasses = (allData.routine || []).filter(c => c.Period === periodName && c.Sub);
+            
+            if (['সমাবেশ ও প্রস্তুতি', 'টিফিন'].includes(periodName)) {
+                if (containerId === 'current-classes-container') {
+                    container.innerHTML = `<p class="text-center text-gray-500">${periodName} চলছে।</p>`;
+                } else {
+                    container.innerHTML = '';
+                }
+                return;
+            }
+            
+            if (periodClasses.length === 0) {
+                container.innerHTML = `<p class="text-center text-gray-500">এই পিরিয়ডে কোনো ক্লাস পাওয়া যায়নি।</p>`;
+                return;
+            }
+            
+            const bgColor = containerId === 'current-classes-container' ? 'bg-[#E8FFFB]' : 'bg-[#fcf5ca]';
+            container.innerHTML = periodClasses.map(c => {
+                const todaysAttendance = allData.todaysAttendance || [];
+                const fifthPeriodAttendance = todaysAttendance.find(att => att.Class === c.Class && att.Period === '৫ম ঘণ্টা');
+                const firstPeriodAttendance = todaysAttendance.find(att => att.Class === c.Class && att.Period === '১ম ঘণ্টা');
+                const finalAttendanceData = fifthPeriodAttendance || firstPeriodAttendance;
+
+                const attendanceHTML = finalAttendanceData && finalAttendanceData.Attendance
+                    ? `<p class="text-sm text-gray-700 mt-1">শিক্ষার্থী উপস্থিতি: ${toBengaliNumber(finalAttendanceData.Attendance)} জন</p>`
+                    : '';
+                
+                return `
+                    <div class="p-4 rounded-xl shadow-md ${bgColor} text-center space-y-1">
+                        <p class="text-lg font-bold text-gray-800">${c.Class || ''}</p>
+                        <p class="text-md text-purple-800">${c.TeacherFN || ''}</p>
+                        <p class="text-md text-gray-700">${c.Sub || ''}</p>
+                        ${attendanceHTML}
+                    </div>`;
+            }).join('');
+        }
+
+        function renderTeacherList() {
+            const filterValue = document.getElementById('teacher-filter-select').value;
+            const container = document.getElementById('teacher-list-container');
+            const filterMap = {
+                ebtedayi: 'এবতেদায়ি', dakhil: 'দাখিল', alim: 'আলিম',
+                fazil: 'ফাযিল', grade3: 'কর্মচারি ৩য় গ্রেড', grade4: 'কর্মচারি ৪র্থ গ্রেড'
+            };
+            const teachers = (allData.allTeachers || []).filter(t => filterValue === 'all' || t.Grade === filterMap[filterValue]);
+
+            if (teachers.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-500">এই ক্যাটাগরিতে কোনো শিক্ষক/কর্মচারী নেই।</p>';
+                return;
+            }
+            container.innerHTML = teachers.map(t => {
+                const classCountHTML = t.Grade !== 'কর্মচারি ৪র্থ গ্রেড' && t.Grade !== 'কর্মচারি ৩য় গ্রেড'
+                    ? `<p class="text-md text-black">সাপ্তাহিক ক্লাস সংখ্যা: ${toBengaliNumber(t.weeklyClassCount)}টি</p>`
+                    : '';
+                
+                const photoButtonDisabled = !t.TcrPhoto || t.TcrPhoto === 'null' ? 'disabled' : '';
+                const photoButtonClass = !t.TcrPhoto || t.TcrPhoto === 'null' ? 'bg-gray-300 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600';
+
+                return `
+                    <div class="p-4 rounded-xl shadow-md bg-[#F8FFEB] text-center space-y-2">
+                        <p class="text-xl font-bold text-green-700">${t.TeacherFN || ''}</p>
+                        <p class="text-lg text-purple-800">${t.Designation || ''}${t.TeacherSub ? `, ${t.TeacherSub}` : ''}</p>
+                        <p class="text-md text-black">ইনডেক্স: ${t.IndexNo || 'তথ্য নেই'}</p>
+                        <p class="text-md text-black">স্তর: ${t.Grade || 'তথ্য নেই'}</p>
+                        ${classCountHTML}
+                        <div class="flex justify-center space-x-2 mt-4">
+                           <a href="tel:${t.MobileNo}" class="btn-accent-light text-white px-3 py-2 rounded-full text-sm flex items-center justify-center">
+                               কল করুন
+                           </a>
+                           <button class="bg-gray-500 text-white px-3 py-2 rounded-full text-sm" onclick="showAddressModal('${t.TcrAddress}')">
+                               ঠিকানা
+                           </button>
+                           <button class="text-white px-3 py-2 rounded-full text-sm ${photoButtonClass}" onclick="showPhotoModal('${t.TcrPhoto}', '${t.TeacherFN}', '${t.Designation}')" ${photoButtonDisabled}>
+                                ছবি
+                           </button>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
+        function showAddressModal(address) {
+            const addressContent = document.getElementById('address-content');
+            addressContent.textContent = address || 'ঠিকানা পাওয়া যায়নি।';
+            document.getElementById('address-modal').classList.remove('hidden');
+        }
+
+        function showPhotoModal(photoUrl, name, designation) {
+            if (!photoUrl || photoUrl === 'null') return;
+            const modal = document.getElementById('photo-modal');
+            const imageDiv = document.getElementById('photo-modal-image');
+            const nameEl = document.getElementById('photo-modal-name');
+            const designationEl = document.getElementById('photo-modal-designation');
+
+            imageDiv.style.backgroundImage = `url('${photoUrl}')`;
+            nameEl.textContent = name;
+            
+            const teacher = allData.allTeachers.find(t => t.TeacherFN === name);
+            const subject = teacher && teacher.TeacherSub ? `, ${teacher.TeacherSub}` : '';
+            designationEl.textContent = `${designation}${subject}`;
+
+            modal.classList.remove('hidden');
+        }
+
+        function renderOnLeaveTeachers() {
+            const container = document.getElementById('on-leave-teachers-container');
+            const onPersonalLeave = (allData.onLeave || []).filter(t => !!t.IndexNo);
+
+            if (onPersonalLeave.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-500">আজ কোনো শিক্ষক ব্যক্তিগত ছুটিতে নেই।</p>'; return;
+            }
+            container.innerHTML = onPersonalLeave.map(t => {
+                const startDate = parseClientDate(t.LeaveStart);
+                const endDate = parseClientDate(t.LeaveEnd);
+                const dateString = startDate && endDate ? `${formatMyDate(startDate)} থেকে ${formatMyDate(endDate)}` : 'তারিখ পাওয়া যায়নি';
+                return `
+                    <div class="p-4 rounded-xl shadow-md bg-yellow-100 text-center space-y-1">
+                        <p class="text-lg font-bold">${t.TeacherFN || 'নাম নেই'}</p>
+                        <p class="text-sm">পদবী: ${t.Designation || 'তথ্য নেই'}</p>
+                        <p class="text-sm">ছুটির ধরন: ${t.LeaveType || 'অনির্দিষ্ট'}</p>
+                        <p class="text-sm">সময়কাল: ${dateString}</p>
+                        ${t.Comment ? `<p class="text-sm mt-1 p-2 bg-yellow-50 rounded"><strong>বদলি শিক্ষক:</strong> ${t.Comment}</p>` : ''}
+                    </div>`;
+            }).join('');
+        }
+        
+        function renderOffPeriodTeachers() {
+            const container = document.getElementById('off-teachers-list');
+            const currentPeriod = getCurrentPeriod(new Date());
+
+            if (!currentPeriod || ['সমাবেশ ও প্রস্তুতি', 'টিফিন'].includes(currentPeriod.name)) {
+                container.innerHTML = '<p class="text-center text-gray-500">এখন কোনো ক্লাস চলছে না।</p>';
+                return;
+            }
+
+            const teachersInClassNow = new Set((allData.routine || []).filter(c => c.Period === currentPeriod.name && c.Sub).map(c => c.TeacherFN));
+            const onLeaveIndices = new Set((allData.onLeave || []).filter(l => l.IndexNo).map(t => t.IndexNo));
+
+            const offPeriodTeachers = (allData.allTeachers || []).filter(teacher => {
+                const isTeachingStaff = teacher.Designation && TEACHING_STAFF_DESIGNATIONS.some(d => teacher.Designation.trim().includes(d));
+                return isTeachingStaff &&
+                       !onLeaveIndices.has(teacher.IndexNo) &&
+                       !teachersInClassNow.has(teacher.TeacherFN);
+            });
+
+            if (offPeriodTeachers.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-500">এই মুহূর্তে কোনো শিক্ষক অফ পিরিয়ডে নেই।</p>';
+                return;
+            }
+
+            container.innerHTML = offPeriodTeachers.map(teacher => {
+                const currentPeriodIndex = classPeriods.findIndex(p => p.name === currentPeriod.name);
+                let nextClass = null;
+                for (let i = currentPeriodIndex + 1; i < classPeriods.length; i++) {
+                    nextClass = (allData.routine || []).find(c => c.Period === classPeriods[i].name && c.TeacherFN === teacher.TeacherFN && c.Sub);
+                    if (nextClass) break;
+                }
+                const nextClassText = nextClass ? `পরবর্তী ক্লাস: ${nextClass.Period}, ${nextClass.Class}` : 'আজ আর কোনো ক্লাস নেই';
+
+                return `
+                <div class="p-4 rounded-xl shadow-md bg-[#fff3c9] text-center space-y-1">
+                    <p class="text-lg font-bold text-gray-800">${teacher.TeacherFN}</p>
+                    <p class="text-md text-gray-700">${teacher.Designation}</p>
+                    <p class="text-sm text-gray-600">${nextClassText}</p>
+                    <a href="tel:${teacher.MobileNo}" class="btn-accent-light text-white px-4 py-2 rounded-full text-sm mt-2 inline-block">কল করুন</a>
+                </div>`;
+            }).join('');
+        }
+        
+        function renderYourClasses(teacher) {
+            const container = document.getElementById('your-classes-container');
+            const yourClassesToday = (allData.routine || []).filter(c => c.TeacherFN === teacher.TeacherFN && c.Sub);
+            const now = new Date();
+
+            const lastPeriod = classPeriods[classPeriods.length - 1];
+            const [endHour, endMinute] = lastPeriod.end.split(':').map(Number);
+            const schoolEndTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), endHour, endMinute);
+
+            if (now > schoolEndTime || yourClassesToday.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-500 mt-2">আজ আপনার আর কোনো ক্লাস নেই।</p>';
+                return;
+            }
+            
+            container.innerHTML = yourClassesToday.map(c => {
+                const periodInfo = classPeriods.find(p => p.name === c.Period);
+                let cardColorClass = 'bg-yellow-50'; // Upcoming
+                if (periodInfo) {
+                    const [startHour, startMinute] = periodInfo.start.split(':').map(Number);
+                    const [endHour, endMinute] = periodInfo.end.split(':').map(Number);
+                    const classStartTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), startHour, startMinute);
+                    const classEndTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), endHour, endMinute);
+                    
+                    if (now >= classStartTime && now <= classEndTime) cardColorClass = 'bg-green-100'; // Current
+                    else if (now > classEndTime) cardColorClass = 'bg-orange-100'; // Completed
+                }
+                
+                const timeRange = periodInfo ? `${formatTime(periodInfo.start)} - ${formatTime(periodInfo.end)}` : '';
+                
+                return `
+                    <div class="p-4 rounded-xl shadow-md ${cardColorClass} text-center">
+                        <p class="text-lg font-bold text-gray-800 mb-1">শ্রেণি: ${c.Class}</p>
+                        <p class="text-sm font-bold text-gray-800 mb-1">${c.Period}</p>
+                        <p class="text-sm text-purple-800">সময়: ${timeRange}</p>
+                        <p class="text-md text-gray-700">বিষয়: ${c.Sub}</p>
+                    </div>`;
+            }).join('');
+        }
+
+        function showMonitorSection() {
+            showSection(null, 'monitor-section');
+            renderMonitorTeam();
+        }
+        
+        function renderDutyRoster() {
+            const container = document.getElementById('duty-roster-container');
+            const now = new Date();
+
+            const [endH, endM] = classPeriods[classPeriods.length - 1].end.split(':').map(Number);
+            const schoolEndTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), endH, endM);
+
+            if (now > schoolEndTime) {
+                container.innerHTML = '<p class="text-center text-gray-600 bg-yellow-100 p-3 rounded-lg shadow-inner">আজকের ডিউটি সময় শেষ।</p>';
+                return;
+            }
+
+            const roster = allData.dutyRoster;
+
+            if (!roster || Object.keys(roster).length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-500">আজ কোনো ডিউটি তালিকা তৈরি হয়নি।</p>';
+                return;
+            }
+
+              const tableRows = Object.entries(roster).map(([period, monitor]) => {
+                return `
+                    <tr class="hover:bg-gray-50">
+                        <td class="border py-2 font-semibold text-center w-1">${period}</td>
+                        <td class="border px-4 py-2 text-center">
+                            <span class="cursor-pointer text-blue-600 hover:underline" onclick="promptReassignment('${period}', '${monitor.name}', '${monitor.index}')">
+                                ${monitor.name} (${monitor.index})
+                            </span>
+                        </td>
+                    </tr>
+                `;
+              }).join('');
+
+              container.innerHTML = `
+                <p class="text-center text-xs text-red-600 mb-2">অ্যাপ দ্বারা স্বয়ংক্রিয়ভাবে নির্ধারিত।<br>টিম প্রধান এই তালিকা সংশোধন করতে পারবেন।</p>
+                <table class="w-full text-sm text-left border-collapse border">
+                    <thead class="bg-gray-200">
+                        <tr>
+                            <th class="border py-2 text-center w-1">পিরিয়ড</th>
+                            <th class="border px-4 py-2 text-center">দায়িত্বপ্রাপ্ত মনিটর</th>
+                        </tr>
+                    </thead>
+                    <tbody>${tableRows}</tbody>
+                </table>
+            `;
+        }
+
+function renderMonitorTeam() {
+    const container = document.getElementById('monitor-team-list');
+    const now = new Date();
+    const currentPeriod = getCurrentPeriod(now);
+
+    const [endH, endM] = classPeriods[classPeriods.length - 1].end.split(':').map(Number);
+    const schoolEndTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), endH, endM);
+
+    if (now > schoolEndTime) {
+        container.innerHTML = '<p class="text-center text-gray-500">মনিটরিং সময় আজকের মতো সমাপ্ত।</p>';
+        return;
+    }
+
+    const dutyRoster = allData.dutyRoster || {};
+    const uniqueMonitorIndices = [...new Set(Object.values(dutyRoster).map(monitor => monitor.index))];
+
+    if (uniqueMonitorIndices.length === 0) {
+        container.innerHTML = '<p class="text-center text-gray-500">আজ কোনো মনিটরের দায়িত্ব নির্ধারিত নেই।</p>';
+        return;
+    }
+
+    const teachingPeriods = classPeriods.filter(p => !['সমাবেশ ও প্রস্তুতি', 'টিফিন'].includes(p.name));
+    
+    container.innerHTML = uniqueMonitorIndices.map(index => {
+        const monitorInfo = (allData.allTeachers || []).find(t => t.IndexNo == index);
+        if (!monitorInfo) return ''; 
+
+        const permanentMonitorInfo = (allData.monitoringTeam || []).find(m => m.TeacherIndex == index);
+        const isPermanentMonitorToday = permanentMonitorInfo && (permanentMonitorInfo.MonitorDay || '').includes(new Intl.DateTimeFormat('bn-BD', { weekday: 'long' }).format(now));
+
+        const role = isPermanentMonitorToday ? (permanentMonitorInfo.Role || 'টিম সদস্য') : 'সাময়িক দায়িত্ব';
+        const roleColorClass = role === 'টিম প্রধান' ? 'text-purple-700 font-bold' : (role === 'সাময়িক দায়িত্ব' ? 'text-orange-700 font-bold' : 'text-gray-700');
+
+        const assignedPeriods = new Set((allData.routine || []).filter(c => c.TeacherFN === monitorInfo.TeacherFN && c.Sub).map(c => c.Period));
+        const offPeriods = teachingPeriods.filter(p => !assignedPeriods.has(p.name));
+        const offPeriodsText = offPeriods.map(p => p.name).join(', ') || 'নেই';
+        const offPeriodHTML = `<p class="text-sm text-gray-600 mt-1"><strong>অফ পিরিয়ড:</strong> ${offPeriodsText}</p>`;
+
+        const isBusy = currentPeriod && assignedPeriods.has(currentPeriod.name);
+        const cardBgClass = isBusy ? 'bg-red-100 border border-red-200' : 'bg-teal-50 hover:bg-teal-100';
+
+        return `
+            <div class="p-4 rounded-xl shadow-md text-center space-y-2 cursor-pointer ${cardBgClass}" data-index="${monitorInfo.IndexNo}">
+                <p class="text-xl font-bold text-teal-800">${monitorInfo.TeacherFN} (${monitorInfo.IndexNo})</p>
+                <p class="text-md ${roleColorClass}">${role}</p>
+                ${offPeriodHTML}
+            </div>`;
+    }).join('');
+
+    container.querySelectorAll('[data-index]').forEach(el => {
+        el.addEventListener('click', () => {
+            const index = el.dataset.index;
+            currentMonitor = (allData.allTeachers || []).find(t => t.IndexNo == index); // Simplified
+            document.getElementById('monitor-index-input').value = index;
+            document.getElementById('monitor-password-modal').classList.remove('hidden');
+            document.getElementById('monitor-password-input').focus();
+        });
+    });
+}
+        
+        async function handleMonitorLogin(e) {
+            e.preventDefault();
+            const index = document.getElementById('monitor-index-input').value;
+            const password = document.getElementById('monitor-password-input').value;
+            const btn = document.getElementById('monitor-login-btn'), btnText = btn.querySelector('span'), spinner = btn.querySelector('.spinner');
+            btn.disabled = true; btnText.textContent = 'প্রসেসিং...'; spinner.classList.remove('hidden');
+            
+            const formData = new FormData();
+            formData.append('action', 'monitorLogin');
+            formData.append('index', index);
+            formData.append('password', password);
+
+            try {
+                const response = await fetch(webAppUrl, { method: 'POST', body: formData });
+                const result = await response.json();
+                if (result.status === 'success') {
+                    document.getElementById('monitor-password-modal').classList.add('hidden');
+                    e.target.reset();
+                    openMonitorForm();
+                } else { throw new Error(result.message || 'পাসওয়ার্ড সঠিক নয়।'); }
+            } catch (error) {
+                showStatusModal(false, error.message);
+            } finally {
+                btn.disabled = false; btnText.textContent = 'প্রবেশ'; spinner.classList.add('hidden');
+            }
+        }
+
+        function openMonitorForm() {
+            const form = document.getElementById('monitor-form');
+            form.reset();
+            
+            const currentPeriod = getCurrentPeriod(new Date());
+            const isClassTime = currentPeriod && !['সমাবেশ ও প্রস্তুতি', 'টিফিন'].includes(currentPeriod.name);
+
+            const statusMessageDiv = document.getElementById('monitor-form-status-message');
+            const formElements = form.querySelectorAll('select, input, button[type="submit"], button[type="button"]');
+
+            if (isClassTime) {
+                statusMessageDiv.classList.add('hidden');
+                formElements.forEach(el => el.disabled = false);
+
+                document.getElementById('monitor-form-period').value = currentPeriod.name;
+            } else {
+                statusMessageDiv.textContent = 'এখন কোনো ক্লাস চলছে না। ক্লাস শুরু হলে ফর্মটি সক্রিয় হবে।';
+                statusMessageDiv.classList.remove('hidden');
+                formElements.forEach(el => el.disabled = true);
+                
+                document.getElementById('cancel-monitor-form').disabled = false;
+            }
+
+            document.getElementById('monitor-form-index').value = currentMonitor.IndexNo;
+            
+            const levelDropdown = document.getElementById('monitor-form-level');
+            levelDropdown.innerHTML = '<option value="" disabled selected>-- স্তর নির্বাচন করুন --</option>';
+            Object.keys(classStructure).forEach(level => {
+                const option = document.createElement('option');
+                option.value = level;
+                option.textContent = level;
+                levelDropdown.appendChild(option);
+            });
+            
+            document.getElementById('monitor-form-class').innerHTML = '<option value="" disabled selected>-- শ্রেণি --</option>';
+            document.getElementById('monitor-form-class').disabled = !isClassTime;
+            document.getElementById('monitor-form-teacher').value = '';
+            document.getElementById('monitor-form-teacher-select').classList.add('hidden');
+
+            document.getElementById('monitor-form-modal').classList.remove('hidden');
+        }
+
+        
+        function populateMonitorClassDropdown(e) {
+            const classSelect = document.getElementById('monitor-form-class');
+            const selectedLevel = e.target.value;
+            classSelect.innerHTML = '<option value="" disabled selected>-- শ্রেণি --</option>';
+            document.getElementById('monitor-form-teacher').value = '';
+
+            if (selectedLevel && classStructure[selectedLevel]) {
+                classStructure[selectedLevel].forEach(className => {
+                    const option = document.createElement('option');
+                    option.value = className;
+                    option.textContent = className;
+                    classSelect.appendChild(option);
+                });
+                classSelect.disabled = false;
+            } else {
+                classSelect.disabled = true;
+            }
+        }
+
+        function handleClassSelectionInMonitorForm(e) {
+            const selectedClass = e.target.value;
+            const form = document.getElementById('monitor-form');
+            const teacherInput = form.querySelector('#monitor-form-teacher');
+            const teacherSelect = form.querySelector('#monitor-form-teacher-select');
+            const attendanceInput = form.querySelector('#monitor-form-attendance');
+            const currentPeriodName = form.querySelector('#monitor-form-period').value;
+
+            const classInfoArray = (allData.routine || []).filter(c => c.Class === selectedClass && c.Period === currentPeriodName);
+
+            teacherSelect.classList.add('hidden');
+            teacherSelect.innerHTML = '';
+
+            if (classInfoArray.length > 1) {
+                teacherSelect.classList.remove('hidden');
+                teacherSelect.innerHTML = '<option value="">-- একাধিক শিক্ষক, বাছাই করুন --</option>';
+                
+                classInfoArray.forEach(classInfo => {
+                    const displayText = classInfo.TeacherSub ? `${classInfo.TeacherFN} (${classInfo.TeacherSub})` : classInfo.TeacherFN;
+                    const option = new Option(displayText, classInfo.TeacherFN);
+                    teacherSelect.add(option);
+                });
+
+                teacherInput.value = classInfoArray[0].TeacherFN;
+
+                teacherSelect.onchange = () => {
+                    if (teacherSelect.value) {
+                        teacherInput.value = teacherSelect.value;
+                    }
+                };
+
+            } else if (classInfoArray.length === 1) {
+                teacherInput.value = classInfoArray[0].TeacherFN;
+                teacherSelect.onchange = null;
+            } else {
+                teacherInput.value = 'রুটিনে শিক্ষক নেই';
+                teacherSelect.onchange = null;
+            }
+
+            const todaysAttendance = allData.todaysAttendance || [];
+            const fifthPeriodAttendance = todaysAttendance.find(att => att.Class === selectedClass && att.Period === '৫ম ঘণ্টা');
+            const firstPeriodAttendance = todaysAttendance.find(att => att.Class === selectedClass && att.Period === '১ম ঘণ্টা');
+            const latestAttendance = fifthPeriodAttendance || firstPeriodAttendance;
+            
+            attendanceInput.value = (latestAttendance && latestAttendance.Attendance != null) ? latestAttendance.Attendance : '';
+        }
+
+        async function handleMonitorReportSubmit(e) {
+            e.preventDefault();
+            const btn = document.getElementById('monitor-submit-btn'), btnText = btn.querySelector('span'), spinner = btn.querySelector('.spinner');
+            btn.disabled = true; btnText.textContent = 'জমা হচ্ছে...'; spinner.classList.remove('hidden');
+            
+            const reportData = getReportDataFromForm('monitor-form');
+            if (!reportData) { 
+                btn.disabled = false; btnText.textContent = 'জমা দিন'; spinner.classList.add('hidden');
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('action', 'submitAttendance');
+                for (const key in reportData) {
+                    formData.append(key, reportData[key]);
+                }
+                
+                const response = await fetch(webAppUrl, { method: 'POST', body: formData });
+                const result = await response.json();
+                if (result.status === 'success') {
+                    showStatusModal(true, 'আপনার মনিটরিং রিপোর্ট সফলভাবে জমা হয়েছে।');
+                    document.getElementById('monitor-form-modal').classList.add('hidden');
+                    loadData(true, true); 
+                } else { throw new Error(result.message || 'রিপোর্ট জমা দেওয়ার সময় সমস্যা হয়েছে।'); }
+            } catch (error) {
+                showStatusModal(false, error.message);
+            } finally {
+                btn.disabled = false; btnText.textContent = 'জমা দিন'; spinner.classList.add('hidden');
+            }
+        }
+        
+        function renderMonitoringReport() {
+            const container = document.getElementById('monitoring-report-container');
+            container.innerHTML = '<p class="text-center text-gray-500">রিপোর্ট দেখতে তারিখ নির্বাচন করে "রিপোর্ট দেখুন" বাটনে ক্লিক করুন।</p>';
+        }
+
+        function generateReport(selectedDateStr) {
+            const container = document.getElementById('monitoring-report-container');
+            const reports = allData.monitoringReport || [];
+
+            const selectedDate = new Date(selectedDateStr + 'T12:00:00');
+            const yyyy = selectedDate.getFullYear();
+            const mm = String(selectedDate.getMonth() + 1).padStart(2, '0');
+            const dd = String(selectedDate.getDate()).padStart(2, '0');
+            const dateToFilter = `${yyyy}-${mm}-${dd}`;
+
+            const filteredReports = reports.filter(r => r.ReportDate && r.ReportDate === dateToFilter);
+
+            const totalReportsForPeriod = filteredReports.length;
+        const issueReports = filteredReports.filter(r => r.MonitorReportText && r.MonitorReportText.trim() !== 'ঠিক আছে' && r.MonitorReportText.trim() !== '');
+            const noteHTML = `<p class="text-green-700 text-center text-md mt-4 p-3 bg-green-50 rounded-lg">উপরে উল্লিখিত পর্যবেক্ষণগুলো ছাড়া বাকি সব ক্লাস সঠিক সময়ে সঠিকভাবে সম্পন্ন হয়েছে।</p>`;
+            
+            const reportTitle = `মনিটরিং রিপোর্ট`;
+            const subtitleHTML = `<p class="text-center text-sm mb-4">তারিখ: ${formatMyDate(selectedDate)}</p>`;
+            const reportId = `report-content-${dateToFilter}`;
+
+            let reportContentHTML = '';
+
+            if (totalReportsForPeriod === 0) {
+                reportContentHTML = `<div class="bg-white p-4 rounded-lg shadow-inner text-center text-gray-500">এই তারিখে কোনো মনিটরিং রিপোর্ট জমা হয়নি।</div>`;
+            } 
+            else if (issueReports.length === 0) {
+                reportContentHTML = `<div class="bg-white p-4 rounded-lg shadow-inner text-center text-gray-700">এই তারিখে কোনো জরুরি পর্যবেক্ষণ পাওয়া যায়নি।</div> ${noteHTML}`;
+            } 
+            else {
+                issueReports.sort((a, b) => {
+                    const periodA = classPeriods.findIndex(p => p.name === a.Period);
+                    const periodB = classPeriods.findIndex(p => p.name === b.Period);
+                    return periodA - periodB;
+                });
+
+                const reportCardsHtml = issueReports.map((report, index) => {
+                    const teacherIdentifier = getTeacherInfo(report.TeacherName, 'NickName');
+                    return `
+                        <div class="bg-white p-4 rounded-lg shadow-md border-l-4 border-teal-500 mb-4">
+                            <h4 class="text-lg font-bold text-purple-700 mb-2" style="text-decoration: underline;">রিপোর্ট-${toBengaliNumber(index + 1)}:</h4>
+                            <p class="text-md text-gray-800">
+                                <strong>${report.Period || ''}</strong>, ${report.Class || ''}, শিক্ষক: ${teacherIdentifier}, শিক্ষার্থী উপস্থিতি: ${toBengaliNumber(report.Attendance)}
+                            </p>
+                            <p class="text-md text-blue-700"><strong>মন্তব্য:</strong> ${report.MonitorReportText || 'নেই'}</p>
+                            <p class="text-md text-red-600"><strong>মনিটর ইনডেক্স:</strong> ${report.MonitorIndex || ''}</p>
+                        </div>
+                    `;
+                }).join('');
+                reportContentHTML = `<div>${reportCardsHtml}</div> ${noteHTML}`;
+            }
+
+            container.innerHTML = `
+                <div id="${reportId}" class="relative bg-gray-50 p-4 rounded-lg shadow-inner">
+                    <div class="text-center mb-2">
+                        <p class="font-bold">শিবগঞ্জ ফাযিল ডিগ্রী মাদ্রাসা, শিবগঞ্জ, বগুড়া</p>
+                        <p class="font-bold">${reportTitle}</p>
+                    </div>
+                    ${subtitleHTML}
+                    ${reportContentHTML}
+                </div>
+                <div class="mt-4 flex justify-end space-x-2">
+                    <button class="btn-download bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm" data-target="${reportId}" data-filename="daily_report_${dateToFilter}">ডাউনলোড</button>
+                </div>
+            `;
+            
+            container.querySelector('.btn-download').addEventListener('click', (e) => {
+                reportToDownloadId = e.currentTarget.dataset.target;
+                reportFileName = e.currentTarget.dataset.filename;
+                downloadOptionsModal.classList.remove('hidden');
+            });
+        }
+
+        function getTeacherInfo(teacherName, field) {
+            if (!allData.allTeachers || !teacherName) return teacherName || 'N/A';
+            const teacher = allData.allTeachers.find(t => t.TeacherFN.trim() === teacherName.trim());
+            if (!teacher) return teacherName; 
+
+            if (field === 'NickName') {
+                return teacher.NickName || teacher.TeacherFN.split(' ')[0] || teacher.TeacherFN;
+            }
+            if (field === 'IndexNo') {
+                return teacher.IndexNo || 'N/A';
+            }
+            return teacher.TeacherFN;
+        }
+
+        async function handleReportPasswordSubmit(e) {
+            e.preventDefault();
+            const password = document.getElementById('report-password-input').value;
+            const modal = document.getElementById('report-password-modal');
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalBtnText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'প্রসেসিং...';
+            
+            const formData = new FormData();
+            formData.append('action', 'checkPassword');
+            formData.append('password', password);
+
+            try {
+                const response = await fetch(webAppUrl, { method: 'POST', body: formData });
+                const result = await response.json();
+                if (result.status === 'success') {
+                    modal.classList.add('hidden');
+                    e.target.reset();
+                    if (typeof reportAccessCallback === 'function') {
+                        reportAccessCallback();
+                    }
+                    reportAccessCallback = null; 
+                } else {
+                    throw new Error(result.message || 'পাসওয়ার্ড সঠিক নয়।');
+                }
+            } catch (error) {
+                showStatusModal(false, error.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalBtnText;
+            }
+        }
+
+        function handleTeacherEntry() {
+            if (loggedInTeacher) {
+                showSection(null, 'teacher-entry-section');
+                return;
+            }
+            
+            const savedIndex = localStorage.getItem('teacherIndex');
+            if (savedIndex && allData.allTeachers) {
+                const teacher = allData.allTeachers.find(t => t.IndexNo == savedIndex);
+                if (teacher) {
+                    loggedInTeacher = teacher;
+                    showSection(null, 'teacher-entry-section');
+                    renderTeacherProfile(loggedInTeacher);
+                    renderYourClasses(loggedInTeacher);
+                    return;
+                }
+            }
+            
+            document.getElementById('password-login-modal').classList.remove('hidden');
+            document.getElementById('login-password-input').focus();
+        }
+        
+        async function handlePasswordLogin(e) {
+            e.preventDefault();
+            const password = document.getElementById('login-password-input').value;
+            const btn = document.getElementById('password-login-btn'), text = btn.querySelector('span'), spin = btn.querySelector('.spinner');
+            btn.disabled = true; text.textContent = 'প্রসেসিং...'; spin.classList.remove('hidden');
+            
+            const formData = new FormData();
+            formData.append('action', 'login');
+            formData.append('password', password);
+
+            try {
+                const response = await fetch(webAppUrl, { method: 'POST', body: formData });
+                const result = await response.json();
+                if (result.status === 'success' && result.teacher) {
+                    loggedInTeacher = result.teacher;
+                    localStorage.setItem('teacherIndex', loggedInTeacher.IndexNo);
+                    document.getElementById('password-login-modal').classList.add('hidden');
+                    e.target.reset();
+                    showSection(null, 'teacher-entry-section');
+                    renderTeacherProfile(loggedInTeacher);
+                    renderYourClasses(loggedInTeacher);
+                } else { throw new Error(result.message || 'পাসওয়ার্ড সঠিক নয়।'); }
+            } catch (error) {
+                showStatusModal(false, error.message);
+            } finally {
+                btn.disabled = false; text.textContent = 'প্রবেশ'; spin.classList.add('hidden');
+            }
+        }
+        
+        function renderTeacherProfile(teacher) {
+            const profileInfoContainer = document.getElementById('profile-info');
+            const placeholderSvg = `<svg class="w-20 h-20 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>`;
+            
+            let photoContainerHTML;
+            if (teacher.TcrPhoto) {
+                photoContainerHTML = `
+                    <div class="w-24 h-24 rounded-full border-4 border-teal-200 overflow-hidden bg-gray-200" 
+                         style="background-image: url('${teacher.TcrPhoto}'); background-size: cover; background-position: center;">
+                    </div>`;
+            } else {
+                photoContainerHTML = `
+                    <div class="w-24 h-24 rounded-full border-4 border-teal-200 flex items-center justify-center overflow-hidden bg-gray-200">
+                        ${placeholderSvg}
+                    </div>`;
+            }
+
+            let profileHTML = `
+                ${photoContainerHTML}
+                <div class="text-center">
+                    <p class="text-2xl font-bold">${teacher.TeacherFN || ''}</p>
+                    <p class="text-lg text-purple-700">${teacher.Designation || ''}</p>
+                    <p class="text-md text-gray-600">ইনডেক্স: ${teacher.IndexNo || ''}</p>
+                </div>`;
+            profileInfoContainer.innerHTML = profileHTML;
+        }
+
+        async function showLeaveCard() {
+            if (!loggedInTeacher) {
+                showStatusModal('info', 'প্রথমে লগইন করুন।');
+                return;
+            }
+            loadingSection.classList.remove('hidden');
+            const formData = new FormData();
+            formData.append('action', 'getIndividualLeaveCard');
+            formData.append('index', loggedInTeacher.IndexNo);
+
+            try {
+                const response = await fetch(webAppUrl, { method: 'POST', body: formData });
+                const result = await response.json();
+                if (result.status === 'success' && result.data) {
+                    renderLeaveCard(result.data);
+                } else {
+                    throw new Error(result.message || 'তথ্য আনা সম্ভব হয়নি।');
+                }
+            } catch (error) {
+                showStatusModal(false, error.message);
+            } finally {
+                loadingSection.classList.add('hidden');
+            }
+        }
+
+        function renderLeaveCard(data) {
+            const { TeacherFN, IndexNo, monthlyLeaves, yearlyLeaves, leaveDetails } = data;
+            const cardContainer = document.getElementById('leave-card-content-wrapper');
+            const today = formatMyDate(new Date());
+
+            let detailsHtml = '';
+            if (leaveDetails && leaveDetails.length > 0) {
+                detailsHtml += '<h6 class="text-md font-bold text-gray-800 mt-3">বিস্তারিত</h6>';
+                leaveDetails.forEach(leave => {
+                    const startDate = new Date(leave.LeaveStart);
+                    const endDate = new Date(leave.LeaveEnd);
+                    const duration = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+                    const startDateFormatted = formatMyDate(startDate);
+                    detailsHtml += `<p class="text-sm text-gray-600">${startDateFormatted} থেকে, ${toBengaliNumber(duration)} দিন, ${leave.LeaveType}</p>`;
+                });
+            }
+
+            cardContainer.innerHTML = `
+                <div id="leave-card-to-download" class="p-4 bg-teal-50 border border-teal-200 rounded-lg shadow-md text-center">
+                    <p class="text-xs text-gray-500 mb-2">রিপোর্টের তারিখ: ${today}</p>
+                    <h5 class="text-lg font-bold text-teal-800">${TeacherFN} (${IndexNo})</h5>
+                    <div class="mt-2 pt-2 border-t">
+                        <p class="text-md text-gray-700"><strong>চলতি মাসে ভোগকৃত ছুটি:</strong> ${toBengaliNumber(monthlyLeaves)} দিন</p>
+                        <p class="text-md text-gray-700"><strong>চলতি বছরে ভোগকৃত ছুটি:</strong> ${toBengaliNumber(yearlyLeaves)} দিন</p>
+                        ${detailsHtml}
+                    </div>
+                </div>`;
+            document.getElementById('leave-card-modal').classList.remove('hidden');
+        }
+
+        async function handleLeaveSubmit(e) {
+            e.preventDefault();
+            if (!loggedInTeacher) return;
+
+            const formData = new FormData();
+            formData.append('action', 'submitLeave');
+            formData.append('index', loggedInTeacher.IndexNo);
+            formData.append('leaveStart', document.getElementById('leave-start-date').value);
+            formData.append('leaveEnd', document.getElementById('leave-end-date').value);
+            formData.append('leaveType', document.getElementById('leave-type').value);
+            formData.append('comment', document.getElementById('leave-comment').value);
+
+            if (!formData.get('leaveStart') || !formData.get('leaveEnd') || !formData.get('leaveType')) {
+                showStatusModal('info', 'অনুগ্রহ করে ছুটির সকল আবশ্যিক তথ্য পূরণ করুন।');
+                return;
+            }
+            try {
+                const response = await fetch(webAppUrl, { method: 'POST', body: formData });
+                const result = await response.json();
+                if (result.status === 'success') {
+                    showStatusModal(true, 'আপনার ছুটির তথ্য সফলভাবে জমা হয়েছে।');
+                    document.getElementById('leave-modal').classList.add('hidden');
+                    e.target.reset();
+                    loadData(true, true);
+                } else { throw new Error(result.message); }
+            } catch (error) {
+                showStatusModal(false, `একটি সমস্যা হয়েছে: ${error.message}`);
+            }
+        }
+        
+        function showOwnAttendanceForm(e){
+            e.preventDefault();
+            document.getElementById('attendance-dropdown').classList.add('hidden');
+            
+            const attendanceContext = getAttendancePeriodContext(); 
+            if (!attendanceContext.isActive) {
+                showStatusModal('info', 'এখন শিক্ষার্থী হাজিরা জমা দেওয়ার সময় নয়। অনুগ্রহ করে নির্ধারিত সময়ে চেষ্টা করুন।');
+                return;
+            }
+
+            const myClass = (allData.routine || []).find(c => c.TeacherFN === loggedInTeacher.TeacherFN && c.Period === attendanceContext.periodName);
+            
+            if (myClass) {
+                document.getElementById('own-class-name').value = myClass.Class;
+                document.getElementById('own-class-teacher-name').value = `${loggedInTeacher.TeacherFN} (${loggedInTeacher.IndexNo})`;
+                document.getElementById('own-attendance-modal').classList.remove('hidden');
+            } else {
+                showStatusModal(false, `দুঃখিত, ${attendanceContext.periodName}-এর জন্য আপনার কোনো ক্লাস রুটিনে পাওয়া যায়নি।`);
+            }
+        }
+
+        function showOtherAttendanceForm(e){
+            e.preventDefault();
+            document.getElementById('attendance-dropdown').classList.add('hidden');
+
+            const attendanceContext = getAttendancePeriodContext();
+            if (!attendanceContext.isActive) {
+                showStatusModal('info', 'এখন শিক্ষার্থী হাজিরা জমা দেওয়ার সময় নয়। অনুগ্রহ করে নির্ধারিত সময়ে চেষ্টা করুন।');
+                return;
+            }
+            
+            const levelSelect = document.getElementById('other-class-level');
+            levelSelect.innerHTML = '<option value="" disabled selected>-- স্তর --</option>';
+            Object.keys(classStructure).forEach(level => {
+                levelSelect.innerHTML += `<option value="${level}">${level}</option>`;
+            });
+            document.getElementById('other-attendance-modal').classList.remove('hidden');
+        }
+
+        async function handleAttendanceSubmit(e, formId) {
+            e.preventDefault();
+            const reportData = getReportDataFromForm(formId);
+            if(!reportData) return;
+
+            try {
+                 const formData = new FormData();
+                formData.append('action', 'submitAttendance');
+                for (const key in reportData) {
+                    formData.append(key, reportData[key]);
+                }
+                const response = await fetch(webAppUrl, { method: 'POST', body: formData });
+                const result = await response.json();
+                if (result.status === 'success') {
+                    showStatusModal(true, 'হাজিরার তথ্য সফলভাবে জমা হয়েছে।');
+                    document.getElementById(`${formId.replace('-form', '')}-modal`).classList.add('hidden');
+                    e.target.reset();
+                    loadData(true, true);
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                 showStatusModal(false, `একটি সমস্যা হয়েছে: ${error.message}`);
+            }
+        }
+
+        function populateClassDropdown(e) {
+            const classSelect = document.getElementById('other-class-name');
+            const selectedLevel = e.target.value;
+            classSelect.innerHTML = '<option value="" disabled selected>-- শ্রেণি --</option>';
+            document.getElementById('other-class-present').value = '';
+            if (selectedLevel && classStructure[selectedLevel]) {
+                classStructure[selectedLevel].forEach(className => {
+                    classSelect.innerHTML += `<option value="${className}">${className}</option>`;
+                });
+                classSelect.disabled = false;
+            } else {
+                classSelect.disabled = true;
+            }
+            document.getElementById('other-class-teacher-name').value = '';
+        }
+        
+        function updateTeacherForSelectedClass(e) {
+            const selectedClass = e.target.value;
+            const teacherInput = document.getElementById('other-class-teacher-name');
+            document.getElementById('other-class-present').value = '';
+            const attendanceContext = getAttendancePeriodContext();
+
+            if (!attendanceContext.isActive) {
+                teacherInput.value = 'হাজিরা সময় নয়';
+                return;
+            }
+
+            const assignedClass = (allData.routine || []).find(c => c.Class === selectedClass && c.Period === attendanceContext.periodName);
+            
+            if (assignedClass && assignedClass.TeacherFN) {
+                const teacher = (allData.allTeachers || []).find(t => t.TeacherFN === assignedClass.TeacherFN);
+                teacherInput.value = teacher ? `${teacher.TeacherFN} (${teacher.IndexNo})` : 'শিক্ষক পাওয়া যায়নি';
+            } else {
+                teacherInput.value = 'এই ক্লাসে কোনো শিক্ষক নেই';
+            }
+        }
+        
+        function showAttendanceReport() {
+            const tableContainer = document.getElementById('attendance-report-content');
+            
+            const todaysAttendance = allData.todaysAttendance || [];
+            
+            const reportId = 'attendance-report-content-inner';
+            let contentHTML = `
+                <div id="${reportId}">
+                    <div class="text-center mb-4">
+                        <p class="font-bold">শিবগঞ্জ ফাযিল ডিগ্রী মাদ্রাসা, শিবগঞ্জ, বগুড়া</p>
+                        <p class="text-sm">শিক্ষার্থী হাজিরা রিপোর্ট, তারিখ: ${formatMyDate(new Date())}</p>
+                    </div>`;
+
+            if(todaysAttendance.length === 0){
+                contentHTML += '<p class="text-center text-gray-500">আজ কোনো হাজিরা জমা দেওয়া হয়নি।</p>';
+            } else {
+                const reportData = {};
+                fullClassList.forEach(className => {
+                    reportData[className] = { '১ম ঘণ্টা': 'N/A', '৫ম ঘণ্টা': 'N/A' };
+                });
+
+                todaysAttendance.forEach(att => {
+                    if(reportData[att.Class]) {
+                        if(att.Period === '১ম ঘণ্টা' || att.Period === '৫ম ঘণ্টা') {
+                            reportData[att.Class][att.Period] = att.Attendance;
+                        }
+                    }
+                });
+
+                let tableRowsHTML = '';
+                let totalFirstHour = 0;
+                let totalFifthHour = 0;
+
+                fullClassList.forEach(className => {
+                    const attendance = reportData[className];
+                    const firstHour = attendance['১ম ঘণ্টা'];
+                    const fifthHour = attendance['৫ম ঘণ্টা'];
+
+                    const firstVal = parseInt(firstHour, 10);
+                    const fifthVal = parseInt(fifthHour, 10);
+
+                    let difference = 'N/A';
+                    if (!isNaN(firstVal) && !isNaN(fifthVal)) {
+                        difference = fifthVal - firstVal;
+                    }
+                    let diffText = toBengaliNumber(difference);
+                    if (difference > 0) diffText = `+${diffText}`;
+
+                    if (!isNaN(firstVal)) {
+                        totalFirstHour += firstVal;
+                    }
+                    if (!isNaN(fifthVal)) {
+                        totalFifthHour += fifthVal;
+                    }
+
+                    tableRowsHTML += `
+                        <tr class="hover:bg-gray-50">
+                            <td class="border p-2 font-semibold">${className}</td>
+                            <td class="border p-2 text-center">${toBengaliNumber(firstHour)}</td>
+                            <td class="border p-2 text-center">${toBengaliNumber(fifthHour)}</td>
+                            <td class="border p-2 text-center">${diffText}</td>
+                        </tr>`;
+                });
+
+                let totalDifference = 'N/A';
+                if (totalFirstHour > 0 || totalFifthHour > 0) {
+                    const diff = totalFifthHour - totalFirstHour;
+                    totalDifference = diff > 0 ? `+${toBengaliNumber(diff)}` : toBengaliNumber(diff);
+                }
+
+                const totalRowHTML = `
+                    <tr class="bg-teal-100 font-bold text-gray-800">
+                        <td class="border p-2">মোট</td>
+                        <td class="border p-2 text-center">${toBengaliNumber(totalFirstHour)}</td>
+                        <td class="border p-2 text-center">${toBengaliNumber(totalFifthHour)}</td>
+                        <td class="border p-2 text-center">${totalDifference}</td>
+                    </tr>
+                `;
+
+                contentHTML += `
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left border-collapse border bg-white">
+                            <thead class="bg-gray-200">
+                                <tr>
+                                    <th class="border p-2">শ্রেণি</th>
+                                    <th class="border p-2 text-center">১ম ঘণ্টা</th>
+                                    <th class="border p-2 text-center">৫ম ঘণ্টা</th>
+                                    <th class="border p-2 text-center">পার্থক্য</th>
+                                </tr>
+                            </thead>
+                            <tbody>${tableRowsHTML}${totalRowHTML}</tbody>
+                        </table>
+                    </div>`;
+            }
+
+            contentHTML += '</div>';
+            contentHTML += `
+                <div class="mt-4 flex justify-end space-x-2">
+                    <button class="btn-download bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm" data-target="${reportId}" data-filename="attendance_report">ডাউনলোড</button>
+                    <button id="close-attendance-report" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 text-sm">বন্ধ</button>
+                </div>`;
+            
+            tableContainer.innerHTML = contentHTML;
+
+            tableContainer.querySelector('.btn-download').addEventListener('click', (e) => {
+                reportToDownloadId = e.currentTarget.dataset.target;
+                reportFileName = e.currentTarget.dataset.filename;
+                downloadOptionsModal.classList.remove('hidden');
+            });
+            tableContainer.querySelector('#close-attendance-report').addEventListener('click', () => {
+                document.getElementById('attendance-report-modal').classList.add('hidden');
+            });
+
+            document.getElementById('attendance-report-modal').classList.remove('hidden');
+        }
+
+        function renderSpecialMessages() {
+            const messages = allData.specialMessages || {};
+
+            const officeLetterContainer = document.getElementById('office-letter-container');
+            const officeLetterText = document.getElementById('office-letter-text');
+            if (messages.OfficeLetter) {
+                officeLetterText.textContent = messages.OfficeLetter;
+                officeLetterContainer.classList.remove('hidden');
+            } else {
+                officeLetterContainer.classList.add('hidden');
+            }
+
+            const mssToTeachersContainer = document.getElementById('mss-to-teachers-container');
+            if (messages.MssToTeachers) {
+                mssToTeachersContainer.innerHTML = `<p>${messages.MssToTeachers.replace(/\n/g, '<br>')}</p>`;
+                mssToTeachersContainer.classList.remove('hidden');
+            } else {
+                mssToTeachersContainer.classList.add('hidden');
+            }
+
+            const leaveMessageContainer = document.getElementById('leave-message-container');
+            if (messages.LeaveMessage) {
+                leaveMessageContainer.innerHTML = `<p>${messages.LeaveMessage.replace(/\n/g, '<br>')}</p>`;
+                leaveMessageContainer.classList.remove('hidden');
+            } else {
+                leaveMessageContainer.classList.add('hidden');
+            }
+
+            const monitorInstructionContainer = document.getElementById('monitor-instruction-container');
+            if (messages.MonitorInstruction) {
+                monitorInstructionContainer.innerHTML = `<p>${messages.MonitorInstruction.replace(/\n/g, '<br>')}</p>`;
+                monitorInstructionContainer.classList.remove('hidden');
+            } else {
+                monitorInstructionContainer.classList.add('hidden');
+            }
+        }
+
+        function downloadAsImage() {
+            if (!reportToDownloadId) return;
+            const reportContent = document.getElementById(reportToDownloadId);
+            if (!reportContent) return;
+
+            html2canvas(reportContent, { scale: 2 }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `${reportFileName}.png`;
+                link.href = canvas.toDataURL();
+                link.click();
+            });
+        }
+
+        function downloadAsHTML() {
+            if (!reportToDownloadId) return;
+            const reportContent = document.getElementById(reportToDownloadId);
+            if (!reportContent) return;
+
+            const htmlString = `
+                <!DOCTYPE html>
+                <html lang="bn">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>${reportFileName}</title>
+                    <link rel="preconnect" href="https://fonts.googleapis.com">
+                    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+                    <link href="https://fonts.googleapis.com/css2?family=Tiro+Bangla&display=swap" rel="stylesheet">
+                    <style>
+                        body { font-family: 'Tiro Bangla', serif; margin: 1rem; font-size: 1.1rem; line-height: 1.6; }
+                        .report-container { max-width: 100%; overflow-x: auto; }
+                        table { width: 100%; border-collapse: collapse; }
+                        th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+                        th { background-color: #f0f0f0; font-weight: bold; }
+                        p { margin: 0 0 1rem 0; }
+                        .font-bold { font-weight: bold; }
+                        .text-center { text-align: center; }
+                        .text-sm { font-size: 0.9rem; }
+                        .mb-2 { margin-bottom: 0.5rem; }
+                        .mb-4 { margin-bottom: 1rem; }
+                    </style>
+                </head>
+                <body>
+                    <div class="report-container">
+                        ${reportContent.innerHTML}
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            const blob = new Blob([htmlString], { type: 'text/html' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${reportFileName}.html`;
+            link.click();
+        }
+
+        function downloadAsDoc() {
+            if (!reportToDownloadId) return;
+            const reportContent = document.getElementById(reportToDownloadId);
+            if (!reportContent) return;
+
+            const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' "+
+                "xmlns:w='urn:schemas-microsoft-com:office:word' "+
+                "xmlns='http://www.w3.org/TR/REC-html40'>"+
+                "<head><meta charset='utf-8'><title>Report</title>"+
+                "<style> body { font-family: 'Tiro Bangla', serif; } table { border-collapse: collapse; width: 100%; } th, td { border: 1px solid black; padding: 8px; } </style>"+
+                "</head><body>";
+            const footer = "</body></html>";
+            const sourceHTML = header + reportContent.innerHTML + footer;
+
+            const source = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(sourceHTML);
+            const fileDownload = document.createElement("a");
+            document.body.appendChild(fileDownload);
+            fileDownload.href = source;
+            fileDownload.download = reportFileName + '.doc';
+            fileDownload.click();
+            document.body.removeChild(fileDownload);
+        }
+
+        // --- BATCH SUBMIT & REASSIGNMENT LOGIC ---
+        
+        function getReportDataFromForm(formId) {
+            const form = document.getElementById(formId);
+            let reportData = {};
+            const now = new Date();
+            const currentPeriod = getCurrentPeriod(now);
+
+            reportData.Date = now.toISOString().split('T')[0];
+            reportData.Time = `${now.getHours()}:${now.getMinutes()}`;
+            reportData.Day = new Intl.DateTimeFormat('bn-BD', { weekday: 'long' }).format(now);
+            
+            if (formId === 'own-attendance-form' || formId === 'other-attendance-form') {
+                reportData.Period = getAttendancePeriodContext().periodName;
+            } else {
+                reportData.Period = currentPeriod ? currentPeriod.name : 'N/A';
+            }
+
+            if (formId === 'monitor-form') {
+                 reportData.Class = form.querySelector('#monitor-form-class').value;
+                 reportData.TeacherName = form.querySelector('#monitor-form-teacher').value;
+                 reportData.NumberOfAttend = form.querySelector('#monitor-form-attendance').value;
+                 reportData.monitorIndex = form.querySelector('#monitor-form-index').value;
+
+                 let reportParts = [];
+                 if (form.querySelector('#report-ok').checked) reportParts.push('ঠিক আছে');
+                 if (form.querySelector('#report-no-students').checked) reportParts.push('শিক্ষার্থী নেই');
+                 if (form.querySelector('#report-absent').checked) reportParts.push('শিক্ষক অনুপস্থিত');
+                 if (form.querySelector('#report-late').checked && form.querySelector('#report-late-min').value) reportParts.push(`${toBengaliNumber(form.querySelector('#report-late-min').value)} মিনিট পরে প্রবেশ`);
+                 if (form.querySelector('#report-early').checked && form.querySelector('#report-early-min').value) reportParts.push(`${toBengaliNumber(form.querySelector('#report-early-min').value)} মিনিট আগে প্রস্থান`);
+                 if (form.querySelector('#report-extra-info').checked && form.querySelector('#report-extra-info-text').value) {
+                       reportParts.push(`আরও তথ্য: ${form.querySelector('#report-extra-info-text').value}`);
+                 }
+                 reportData.monitorReport = reportParts.join(', ') || 'ক্লাস পর্যবেক্ষণ করা হয়েছে।';
+
+            } else if (formId === 'own-attendance-form') {
+                reportData.Class = form.querySelector('#own-class-name').value;
+                reportData.TeacherName = loggedInTeacher.TeacherFN;
+                reportData.NumberOfAttend = form.querySelector('#own-class-present').value;
+            } else if (formId === 'other-attendance-form') {
+                reportData.Class = form.querySelector('#other-class-name').value;
+                const teacherInfo = form.querySelector('#other-class-teacher-name').value;
+                reportData.TeacherName = teacherInfo.split('(')[0].trim();
+                reportData.NumberOfAttend = form.querySelector('#other-class-present').value;
+            }
+            return reportData;
+        }
+
+        function saveReportForBatch(formId) {
+            const reportData = getReportDataFromForm(formId);
+            if (!reportData || !reportData.Class) {
+                showStatusModal('info', 'অনুগ্রহ করে ফর্মের প্রয়োজনীয় তথ্য পূরণ করুন।');
+                return;
+            }
+            savedReports.push(reportData);
+            localStorage.setItem('savedReports', JSON.stringify(savedReports));
+            updateBatchSubmitUI();
+            showToast(`মোট সেভ: ${toBengaliNumber(savedReports.length)}টি`);
+            document.getElementById(`${formId}-modal`).classList.add('hidden');
+            const form = document.getElementById(formId);
+            if (formId === 'other-attendance-form') {
+                form.querySelector('#other-class-name').value = '';
+                form.querySelector('#other-class-name').innerHTML = '<option value="" disabled selected>-- শ্রেণি --</option>';
+                form.querySelector('#other-class-present').value = '';
+                form.querySelector('#other-class-teacher-name').value = '';
+            } else {
+                form.reset();
+            }
+        }
+        
+        function updateBatchSubmitUI() {
+            const container = document.getElementById('batch-submit-container');
+            const countEl = document.getElementById('saved-reports-count');
+            if (savedReports.length > 0) {
+                countEl.textContent = toBengaliNumber(savedReports.length);
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+
+        async function submitBatchReports() {
+            if (savedReports.length === 0) {
+                showStatusModal('info', 'জমা দেওয়ার জন্য কোনো সেভ করা রিপোর্ট নেই।');
+                return;
+            }
+            const btn = document.getElementById('batch-submit-button');
+            btn.disabled = true;
+            btn.querySelector('span:last-child').textContent = 'জমা হচ্ছে...';
+
+            try {
+                const formData = new FormData();
+                formData.append('action', 'batchSubmitReports');
+                formData.append('reports', JSON.stringify(savedReports));
+
+                const response = await fetch(webAppUrl, { method: 'POST', body: formData });
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showStatusModal(true, result.message);
+                    savedReports = [];
+                    localStorage.removeItem('savedReports');
+                    updateBatchSubmitUI();
+                    loadData(true, false);
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                showStatusModal(false, `একটি সমস্যা হয়েছে: ${error.message}`);
+            } finally {
+                btn.disabled = false;
+                btn.querySelector('span:last-child').textContent = 'সবগুলো জমা দিন';
+            }
+        }
+
+		function promptReassignment(period, originalMonitorName, originalMonitorIndex) {
+		    dutyReassignmentInfo = { period, originalMonitorName, originalMonitorIndex };
+		    
+		    const modal = document.getElementById('reassign-duty-modal');
+		    modal.querySelector('#reassign-period-text').textContent = period;
+		    modal.querySelector('#reassign-original-monitor-text').textContent = `${originalMonitorName} (${originalMonitorIndex})`;
+		    modal.querySelector('#reassign-period').value = period;
+		    modal.querySelector('#reassign-original-monitor-index').value = originalMonitorIndex;
+
+		    const dayOptions = { weekday: 'long', timeZone: 'Asia/Dhaka' };
+		    const currentDay = new Intl.DateTimeFormat('bn-BD', dayOptions).format(new Date());
+
+		    const onLeaveIndices = new Set((allData.onLeave || []).filter(l => l.IndexNo).map(t => t.IndexNo));
+
+		    const availableMonitors = (allData.monitoringTeam || [])
+		        .filter(m => m.Status === 'On' && m.MonitorDay.includes(currentDay) && !onLeaveIndices.has(m.TeacherIndex) && m.TeacherIndex != originalMonitorIndex);
+
+		    const selectEl = modal.querySelector('#reassign-new-monitor-select');
+		    selectEl.innerHTML = '<option value="" disabled selected>-- নতুন মনিটর --</option>';
+		    
+		    availableMonitors.forEach(m => {
+		        const teacherInfo = (allData.allTeachers || []).find(t => t.IndexNo === m.TeacherIndex);
+		        if (teacherInfo) {
+		            selectEl.innerHTML += `<option value="${m.TeacherIndex}">${teacherInfo.TeacherFN} (${m.TeacherIndex})</option>`;
+		        }
+		    });
+
+		    modal.classList.remove('hidden');
+		}
+
+        async function handleReassignSubmit(e) {
+            e.preventDefault();
+            const modal = document.getElementById('reassign-duty-modal');
+            const btn = modal.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.textContent = 'প্রসেসিং...';
+
+            try {
+                const formData = new FormData();
+                formData.append('action', 'reassignDuty');
+                formData.append('date', new Date().toISOString().split('T')[0]);
+                formData.append('period', document.getElementById('reassign-period').value);
+                formData.append('originalMonitorIndex', document.getElementById('reassign-original-monitor-index').value);
+                formData.append('newMonitorIndex', document.getElementById('reassign-new-monitor-select').value);
+                formData.append('teamLeadPassword', document.getElementById('reassign-password').value);
+
+                if (!formData.get('newMonitorIndex')) {
+                    throw new Error('অনুগ্রহ করে একজন নতুন মনিটর নির্বাচন করুন।');
+                }
+
+                const response = await fetch(webAppUrl, { method: 'POST', body: formData });
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    showStatusModal(true, result.message);
+                    modal.classList.add('hidden');
+                    e.target.reset();
+                    loadData(true, true);
+                } else {
+                    throw new Error(result.message);
+                }
+
+            } catch(error) {
+                showStatusModal(false, error.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'নিশ্চিত করুন';
+            }
+        }
+        
+        // --- SCRIPT INITIALIZATION ---
+        function setupEventListeners() {
+            // Main navigation buttons
+            document.getElementById('btn-teacher-entry').addEventListener('click', (e) => animateAndNavigate(e, handleTeacherEntry));
+            document.getElementById('btn-current-classes').addEventListener('click', (e) => animateAndNavigate(e, () => showSection(e, 'current-classes-section')));
+            document.getElementById('btn-next-classes').addEventListener('click', (e) => animateAndNavigate(e, () => showSection(e, 'next-classes-section')));
+            document.getElementById('btn-teacher-list').addEventListener('click', (e) => animateAndNavigate(e, () => showSection(e, 'teacher-list-section')));
+            document.getElementById('btn-on-leave').addEventListener('click', (e) => animateAndNavigate(e, () => showSection(e, 'on-leave-teachers-section')));
+            document.getElementById('btn-monitor-role').addEventListener('click', (e) => animateAndNavigate(e, showMonitorSection));
+            
+            const openReportPasswordModal = (callback) => {
+                reportAccessCallback = callback;
+                document.getElementById('report-password-modal').classList.remove('hidden');
+                document.getElementById('report-password-input').focus();
+            };
+            
+            document.getElementById('btn-monitoring-report').addEventListener('click', (e) => animateAndNavigate(e, () => {
+                openReportPasswordModal(() => {
+                    showSection(null, 'monitoring-report-section');
+                    const today = new Date().toISOString().split('T')[0];
+                    document.getElementById('report-date-picker').value = today;
+                    generateReport(today);
+                });
+            }));
+            
+            document.getElementById('btn-view-report').addEventListener('click', () => {
+                const selectedDate = document.getElementById('report-date-picker').value;
+                if (selectedDate) {
+                    generateReport(selectedDate);
+                } else {
+                    showStatusModal('info', 'রিপোর্ট দেখার জন্য অনুগ্রহ করে একটি তারিখ নির্বাচন করুন।');
+                }
+            });
+
+            // Back buttons
+            document.querySelectorAll('.btn-back').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const target = e.currentTarget.dataset.target;
+                    animateAndNavigate(e, () => showSection(e, target));
+                });
+            });
+
+            // Auth forms
+            document.getElementById('password-login-form').addEventListener('submit', handlePasswordLogin);
+            document.getElementById('cancel-password-login').addEventListener('click', () => document.getElementById('password-login-modal').classList.add('hidden'));
+
+            // Report Password Modal
+            document.getElementById('report-password-form').addEventListener('submit', handleReportPasswordSubmit);
+            document.getElementById('cancel-report-password').addEventListener('click', () => {
+                document.getElementById('report-password-modal').classList.add('hidden');
+                reportAccessCallback = null;
+            });
+
+            // Modals
+            document.getElementById('status-modal-ok').addEventListener('click', (e) => e.currentTarget.closest('#status-modal').classList.add('hidden'));
+            document.getElementById('close-address-modal').addEventListener('click', () => document.getElementById('address-modal').classList.add('hidden'));
+            document.getElementById('close-photo-modal').addEventListener('click', () => document.getElementById('photo-modal').classList.add('hidden'));
+
+            // Teacher list filter
+            document.getElementById('teacher-filter-select').addEventListener('change', renderTeacherList);
+
+            // Off period teachers toggle
+            document.getElementById('toggle-off-teachers-btn').addEventListener('click', (e) => {
+                 animateAndNavigate(e, () => {
+                     const listEl = document.getElementById('off-teachers-list');
+                     const isNowHidden = listEl.classList.toggle('hidden');
+                     if (!isNowHidden) {
+                         renderOffPeriodTeachers(); 
+                     }
+                 });
+             });
+            
+            // Profile Buttons
+            document.getElementById('leave-request-button').addEventListener('click', () => document.getElementById('leave-modal').classList.remove('hidden'));
+            document.getElementById('btn-view-leave-card').addEventListener('click', showLeaveCard);
+            document.getElementById('close-leave-card-modal').addEventListener('click', () => document.getElementById('leave-card-modal').classList.add('hidden'));
+            document.getElementById('download-html-card-btn').addEventListener('click', () => { reportToDownloadId = 'leave-card-to-download'; reportFileName = 'leave_card'; downloadAsHTML(); });
+            document.getElementById('download-doc-card-btn').addEventListener('click', () => { reportToDownloadId = 'leave-card-to-download'; reportFileName = 'leave_card'; downloadAsDoc(); });
+            document.getElementById('download-image-card-btn').addEventListener('click', () => { reportToDownloadId = 'leave-card-to-download'; reportFileName = 'leave_card'; downloadAsImage(); });
+            
+            document.getElementById('cancel-leave-button').addEventListener('click', () => document.getElementById('leave-modal').classList.add('hidden'));
+            document.getElementById('leave-form').addEventListener('submit', handleLeaveSubmit);
+            document.getElementById('toggle-classes-btn').addEventListener('click', () => {
+                const container = document.getElementById('your-classes-collapsible-container');
+                if (container.style.maxHeight) {
+                    container.style.maxHeight = null;
+                } else {
+                    container.style.maxHeight = container.scrollHeight + "px";
+                }
+            });
+
+            // Attendance Buttons & Forms
+            const attendanceBtn = document.getElementById('submit-attendance-button');
+            const attendanceDropdown = document.getElementById('attendance-dropdown');
+            attendanceBtn.addEventListener('click', () => attendanceDropdown.classList.toggle('hidden'));
+            document.getElementById('own-class-attendance-btn').addEventListener('click', showOwnAttendanceForm);
+            document.getElementById('other-class-attendance-btn').addEventListener('click', showOtherAttendanceForm);
+            document.getElementById('cancel-own-attendance-btn').addEventListener('click', () => document.getElementById('own-attendance-modal').classList.add('hidden'));
+            document.getElementById('cancel-other-attendance-btn').addEventListener('click', () => document.getElementById('other-attendance-modal').classList.add('hidden'));
+            document.getElementById('own-attendance-form').addEventListener('submit', (e) => handleAttendanceSubmit(e, 'own-attendance-form'));
+            document.getElementById('other-attendance-form').addEventListener('submit', (e) => handleAttendanceSubmit(e, 'other-attendance-form'));
+            document.getElementById('other-class-level').addEventListener('change', populateClassDropdown);
+            document.getElementById('other-class-name').addEventListener('change', updateTeacherForSelectedClass);
+            
+            // Attendance Report Button
+            document.getElementById('show-attendance-report-btn').addEventListener('click', () => openReportPasswordModal(showAttendanceReport));
+
+            // Monitor forms
+            document.getElementById('monitor-password-form').addEventListener('submit', handleMonitorLogin);
+            document.getElementById('cancel-monitor-password').addEventListener('click', () => document.getElementById('monitor-password-modal').classList.add('hidden'));
+            document.getElementById('monitor-form').addEventListener('submit', handleMonitorReportSubmit);
+            document.getElementById('cancel-monitor-form').addEventListener('click', () => document.getElementById('monitor-form-modal').classList.add('hidden'));
+            document.getElementById('monitor-form-level').addEventListener('change', populateMonitorClassDropdown);
+            document.getElementById('monitor-form-class').addEventListener('change', handleClassSelectionInMonitorForm);
+            
+            // Download Options Modal Listeners
+            document.getElementById('download-as-html').addEventListener('click', () => { downloadAsHTML(); downloadOptionsModal.classList.add('hidden'); });
+            document.getElementById('download-as-doc').addEventListener('click', () => { downloadAsDoc(); downloadOptionsModal.classList.add('hidden'); });
+            document.getElementById('download-as-image').addEventListener('click', () => { downloadAsImage(); downloadOptionsModal.classList.add('hidden'); });
+            document.getElementById('cancel-download').addEventListener('click', () => { downloadOptionsModal.classList.add('hidden'); });
+
+            // Batch Submit
+            document.getElementById('batch-submit-button').addEventListener('click', submitBatchReports);
+
+            // Save Buttons
+            document.getElementById('save-monitor-form').addEventListener('click', () => saveReportForBatch('monitor-form'));
+            document.getElementById('save-other-attendance-btn').addEventListener('click', () => saveReportForBatch('other-attendance-form'));
+        
+            // Reassignment
+            document.getElementById('reassign-duty-form').addEventListener('submit', handleReassignSubmit);
+            document.getElementById('cancel-reassign-btn').addEventListener('click', () => document.getElementById('reassign-duty-modal').classList.add('hidden'));
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            const storedReports = localStorage.getItem('savedReports');
+            if (storedReports) {
+                savedReports = JSON.parse(storedReports);
+                updateBatchSubmitUI();
+            }
+            loadData(true); // Always force refresh on first load
+            setupEventListeners();
+            setInterval(updateDateTimeAndClasses, 1000); // Update time every second
+            setInterval(() => loadData(true, false), 60000); // Refresh data every 60 seconds
+        });
+        
+    </script>
+</body>
+</html>
+

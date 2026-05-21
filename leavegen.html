@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>লিভ জেনারেটর</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tiro+Bangla:ital@0;1&display=swap" rel="stylesheet">
+    <!-- html2canvas for JPG export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- jsPDF for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body {
+            font-family: 'Tiro Bangla', serif;
+            background-color: #f3f4f6;
+        }
+        
+        /* A4 Preview Styles */
+        .preview-container {
+            width: 210mm;
+            min-height: 297mm;
+            max-height: 297mm;
+            padding: 1in 1in 1in 1.5in; 
+            margin: 20px auto;
+            background: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            color: black;
+            display: none;
+            font-size: 13.5pt;
+            box-sizing: border-box;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* মোবাইলে প্রিভিউ স্ক্রল র‍্যাপার ও প্রিভিউ স্টাইল */
+        @media (max-width: 768px) {
+            .no-print {
+                padding: 0.5rem !important;
+            }
+            .preview-scroll-wrap {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                padding: 10px 0;
+            }
+            .preview-container {
+                margin: 0;
+                min-width: 210mm;
+            }
+            .sub-row select,
+            .sub-row input,
+            .sub-date-wrap {
+                font-size: 10pt;
+                height: 2.5rem;
+            }
+            .sub-date-label {
+                font-size: 10pt;
+            }
+        }
+
+        /* A4 ফিট করার জন্য কন্টেন্ট র‍্যাপার */
+        .preview-content-wrapper {
+            transform-origin: top left;
+        }
+
+        /* জনাব থেকে বিনীত পর্যন্ত ২ লাইন স্পেসিং */
+        .preview-body-content {
+            line-height: 1.8; 
+            text-align: justify;
+        }
+
+        @media print {
+            .no-print { display: none; }
+            body { background: white; padding: 0; margin: 0; }
+            .preview-container {
+                display: block !important;
+                box-shadow: none;
+                margin: 0;
+                width: 210mm;
+                padding: 1in 1in 1in 1.5in;
+                box-sizing: border-box;
+            }
+            .loading-overlay { display: none !important; }
+        }
+
+        /* Input and Select Height adjustments */
+        input, select, textarea {
+            border: 1px solid #d1d5db;
+            padding: 0.75rem 0.5rem;
+            border-radius: 0.375rem;
+            width: 100%;
+            height: 3.2rem; 
+            font-size: 1rem;
+            background-color: white;
+            box-sizing: border-box;
+        }
+        
+        .sub-row select, .sub-row input {
+            height: 3rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.25rem;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .sub-row {
+            display: grid;
+            grid-template-columns: 3fr 1.2fr 1fr 1.2fr 28px;
+            gap: 3px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+
+        .sub-row select,
+        .sub-row input,
+        .sub-date-wrap {
+            font-size: 12pt;
+            height: 3rem;
+        }
+
+        .sub-row select {
+            padding: 0 0.2rem;
+        }
+
+        /* তারিখ ইনপুট কম্প্যাক্ট র‍্যাপার */
+        .sub-date-wrap {
+            position: relative;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            background: white;
+            box-sizing: border-box;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .sub-date-wrap input[type="date"] {
+            height: 100%;
+            width: 100%;
+            padding: 0 0.25rem;
+            font-size: 12pt;
+            font-family: 'Tiro Bangla', serif;
+            border: none;
+            border-radius: 0.375rem;
+            box-sizing: border-box;
+            color: transparent;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        .sub-date-wrap input[type="date"]::-webkit-calendar-picker-indicator {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .sub-date-label {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            font-size: 12pt;
+            font-weight: 600;
+            color: #374151;
+            border-radius: 0.375rem;
+        }
+
+        /* তারিখ নির্বাচিত হলে লেবেল লুকানো */
+        .sub-date-wrap.has-date .sub-date-label {
+            display: none;
+        }
+
+        .sub-date-wrap.has-date input[type="date"] {
+            color: #374151;
+        }
+
+        .inst-header {
+            font-size: 1.5rem; 
+            font-weight: bold;
+        }
+
+        /* স্বাক্ষর লাইনের স্টাইল */
+        .signature-line {
+            border-top: 1px dotted black;
+            width: 35mm;
+            margin-top: 50px;
+            margin-bottom: 5px;
+            margin-left: auto;
+        }
+
+        /* লোডিং ওভারলে */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .loading-spinner {
+            background: white;
+            padding: 2rem 3rem;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .loading-spinner .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e5e7eb;
+            border-top: 4px solid #059669;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* ডাউনলোড ড্রপডাউন মেনু স্টাইল */
+        .download-dropdown {
+            position: relative;
+            flex: 1;
+        }
+
+        .download-dropdown-menu {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+            overflow: hidden;
+            z-index: 100;
+            margin-bottom: 4px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .download-dropdown-menu.active {
+            display: block;
+        }
+
+        .download-dropdown-menu button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: none;
+            background: white;
+            color: #374151;
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: 'Tiro Bangla', serif;
+            cursor: pointer;
+            transition: background 0.15s;
+            height: auto;
+            border-radius: 0;
+        }
+
+        .download-dropdown-menu button:hover {
+            background: #ecfdf5;
+            color: #059669;
+        }
+
+        .download-dropdown-menu button + button {
+            border-top: 1px solid #e5e7eb;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+
+<nav class="bg-sky-800 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+            <!-- ডেস্কটপ মেনু -->
+            <div class="hidden md:flex items-center space-x-4">
+                <a href="/" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">মূল পাতা</a>
+                <a href="/office.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">অফিস প্যানেল</a>
+                <a href="/admin.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">এডমিন প্যানেল</a>
+                <a href="/leavegen.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">ছুটির দরখাস্ত তৈরি</a>
+                <a href="/sutdentdata.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">শিক্ষার্থী তথ্য</a>
+                <a href="/routine.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">ব্যক্তিগত রুটিন</a>
+                <a href="/weeklyroutine.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">সাপ্তাহিক রুটিন</a> 
+                <a href="/classwiseroutine.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">শ্রেণিভিত্তিক রুটিন</a> 
+                <a href="/classcount.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">শিক্ষকের সাপ্তাহিক ক্লাস বিবরণী</a>
+            </div>
+            <!-- মোবাইল মেনু বাটন (হ্যামবার্গার আইকন) -->
+            <div class="md:hidden flex items-center">
+                <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
+                    <span class="sr-only">Open main menu</span>
+                    <!-- Icon when menu is closed -->
+                    <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                    <!-- Icon when menu is open (optional, for better UX) -->
+                    <svg class="hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- ডানপাশের ফাঁকা জায়গা পূরণের জন্য (ঐচ্ছিক) -->
+            <div class="hidden md:block">
+                 <div class="w-px h-px"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- মোবাইল মেনু, যা বাটনে ক্লিক করলে দেখা যাবে -->
+   <div class="md:hidden hidden" id="mobile-menu">
+        <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            <a href="/" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">মূল পাতা</a>
+            <a href="/office.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">অফিস প্যানেল</a>
+            <a href="/admin.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">এডমিন প্যানেল</a>
+            <a href="/leavegen.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">ছুটির দরখাস্ত তৈরি</a>
+            <a href="/sutdentdata.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md font-medium">শিক্ষার্থী তথ্য</a>
+            <a href="/routine.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">ব্যক্তিগত রুটিন</a>
+            <a href="/weeklyroutine.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md font-medium">সাপ্তাহিক রুটিন</a>                
+            <a href="/classwiseroutine.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md font-medium">শ্রেণিভিত্তিক রুটিন</a> 
+            <a href="/classcount.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md font-medium">শিক্ষকের ক্লাস বিবরণী</a>
+        </div>
+    </div>
+</nav>
+
+<!-- মোবাইল মেনু কাজ করার জন্য প্রয়োজনীয় জাভাস্ক্রিপ্ট -->
+<script>
+    //DOMContentLoaded অপেক্ষা করে যাতে DOM এলিমেন্টগুলো লোড হয়
+    document.addEventListener('DOMContentLoaded', () => {
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const icons = mobileMenuButton.querySelectorAll('svg');
+
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+            // আইকন পরিবর্তন করার জন্য (বন্ধ/খোলা)
+            icons.forEach(icon => icon.classList.toggle('hidden'));
+        });
+    });
+</script>
+
+    <!-- লোডিং ওভারলে -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p class="font-bold text-emerald-700">JPG তৈরি হচ্ছে...</p>
+            <p class="text-sm text-gray-500 mt-1">অনুগ্রহ করে অপেক্ষা করুন</p>
+        </div>
+    </div>
+
+    <div class="max-w-6xl mx-auto bg-white p-6 rounded-xl shadow-lg no-print">
+        <!-- Institution Header -->
+        <div class="text-center mb-8 border-b pb-4">
+            <h1 class="inst-header text-emerald-800">শিবগঞ্জ ফাযিল ডিগ্রী মাদরাসা</h1>
+            <p class="text-lg text-gray-600 mt-1 font-semibold">ছুটির দরখাস্ত তৈরি</p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <!-- দরখাস্তকারী শিক্ষক নির্বাচন -->
+            <div class="md:col-span-2">
+                <label for="teacherSelect">দরখাস্তকারী শিক্ষকের নাম</label>
+                <select id="teacherSelect" onchange="onTeacherChange()">
+                    <option value="">-- নাম সিলেক্ট করুন --</option>
+                </select>
+            </div>
+
+            <!-- ছুটির ধরন -->
+            <div>
+                <label>ছুটির ধরন</label>
+                <select id="leaveType" onchange="toggleCustomInput('leaveType', 'customLeaveType')">
+                    <option value="নৈমিত্তিক">নৈমিত্তিক</option>
+                    <option value="দায়িত্বজনিত">ডিউটি লিভ</option>
+                    <option value="চিকিৎসাজনিত">অসুস্থতা</option>
+                    <option value="অধ্যয়ন">উচ্চতর শিক্ষা</option>
+                    <option value="ঐচ্ছিক">ধর্মীয় উৎসব</option>
+                    <option value="others">অন্যান্য (নিচে লিখুন)</option>
+                </select>
+                <input type="text" id="customLeaveType" placeholder="ছুটির ধরন লিখুন" class="mt-2 hidden">
+            </div>
+
+            <!-- ছুটির কারণ -->
+            <div>
+                <label>ছুটির কারণ</label>
+                <select id="leaveReason" onchange="toggleCustomInput('leaveReason', 'customLeaveReason')">
+                    <option value="ব্যক্তিগত জরুরি কাজের কারণে">ব্যক্তিগত জরুরি কাজ</option>
+                    <option value="উত্তরপত্র গ্রহণের উদ্দেশ্যে">উত্তরপত্র গ্রহণ</option>
+                    <option value="প্রশিক্ষণ গ্রহণের উদ্দেশ্যে">প্রশিক্ষণ গ্রহণ</option>
+                    <option value="শারীরিক অসুস্থতার কারণে">শারীরিক অসুস্থতা</option>
+                    <option value="উচ্চতর শিক্ষা গ্রহণের উদ্দেশ্যে">একাডেমিক পড়াশুনা</option>
+                    <option value="ধর্মীয় উৎসব পালনের উদ্দেশ্যে">ধর্মীয় উৎসব পালন</option>
+                    <option value="others">অন্যান্য (নিচে লিখুন)</option>
+                </select>
+                <input type="text" id="customLeaveReason" placeholder="নির্দিষ্ট কারণ লিখুন" class="mt-2 hidden">
+            </div>
+
+            <!-- তারিখ নির্বাচন -->
+            <div>
+                <label>ছুটি শুরু</label>
+                <input type="date" id="startDate" onchange="validateDates()">
+            </div>
+            <div>
+                <label>ছুটি শেষ</label>
+                <input type="date" id="endDate" onchange="validateDates()">
+            </div>
+        </div>
+
+        <!-- বদলী শিক্ষক সেকশন -->
+        <div class="mb-6 p-4 bg-emerald-50 rounded-lg border border-emerald-100">
+            <h3 class="font-bold mb-3 text-emerald-800">বদলী দায়িত্ব পালনকারী শিক্ষক ও ক্লাস</h3>
+            <div id="substituteContainer">
+                <!-- প্রথম রো জাভাস্ক্রিপ্ট দিয়ে তৈরি হবে -->
+            </div>
+            <button onclick="addSubstituteRow()" class="text-sm bg-emerald-600 text-white px-4 py-2 rounded mt-2 hover:bg-emerald-700 font-bold transition">+ আরও যোগ করুন</button>
+        </div>
+
+        <div class="flex flex-col md:flex-row gap-4">
+            <button onclick="generatePreview()" class="flex-1 bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition">প্রিভিউ দেখুন</button>
+            <div id="downloadBtn" class="download-dropdown hidden">
+                <button onclick="toggleDownloadMenu()" class="w-full bg-emerald-600 text-white font-bold py-3 rounded-lg hover:bg-emerald-700 transition">ডাউনলোড ▲</button>
+                <div id="downloadMenu" class="download-dropdown-menu">
+                    <button onclick="downloadAsPDF()">📄 পিডিএফ</button>
+                    <button onclick="downloadAsImage()">🖼️ ইমেজ</button>
+                </div>
+            </div>
+            <button onclick="resetForm()" class="flex-1 bg-gray-500 text-white font-bold py-3 rounded-lg hover:bg-gray-600 transition">রিসেট</button>
+        </div>
+    </div>
+
+    <!-- দরখাস্ত প্রিভিউ এরিয়া -->
+    <div class="preview-scroll-wrap">
+        <div id="printArea" class="preview-container">
+            <!-- Content will be injected here -->
+        </div>
+    </div>
+
+    <script>
+        const institutionName = "শিবগঞ্জ ফাযিল ডিগ্রী মাদরাসা";
+        const institutionAddress = "শিবগঞ্জ, বগুড়া।";
+
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyFDXG-ZzdZIUoLLrC-0Yfs91HRDxKfXNAYRZCYAEPBAyCfEd78jPkZ91ZeGb_SRq0A/exec';
+
+        // ডাইনামিক শিক্ষক ডাটা — API থেকে লোড হবে
+        let teachers = [];
+
+        // আগামীকালের তারিখ YYYY-MM-DD ফরম্যাটে ফেরানোর ফাংশন
+        function getTomorrowDateStr() {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const year = tomorrow.getFullYear();
+            const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
+            const day = String(tomorrow.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function getTodayDateStr() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // পেজ লোডে API থেকে শিক্ষক তালিকা আনা
+        async function initTeacherSelect() {
+            const select = document.getElementById('teacherSelect');
+            select.innerHTML = '<option value=""> লোড হচ্ছে..... </option>';
+            select.disabled = true;
+
+            try {
+                const response = await fetch(`${APPS_SCRIPT_URL}?action=getTeachersForLeave`, {
+                    method: 'GET',
+                    redirect: 'follow'
+                });
+                const result = await response.json();
+
+                if (result.status === 'success' && result.teachers) {
+                    teachers = result.teachers;
+                    select.innerHTML = '<option value="">-- নাম সিলেক্ট করুন --</option>';
+  teachers.forEach(t => {
+    if (!t.Index) return; // ইনডেক্স না থাকলে স্কিপ
+    const opt = document.createElement('option');
+    opt.value = t.Index;
+    opt.dataset.teacherfn = t.TeacherFN;
+    opt.dataset.designation = t.Designation;
+    opt.dataset.mobile = t.MobileNo;
+    opt.textContent = `${t.TeacherFN} (${t.Index})`;
+    select.appendChild(opt);
+});
+                    select.disabled = false;
+                } else {
+                    select.innerHTML = '<option value="">-- তথ্য লোড হয়নি --</option>';
+                    console.error('API error:', result);
+                }
+            } catch (err) {
+                select.innerHTML = '<option value="">-- সংযোগ ব্যর্থ --</option>';
+                console.error('Fetch error:', err);
+            }
+
+            updateAllSubstituteDropdowns();
+        }
+
+        function onTeacherChange() {
+            updateAllSubstituteDropdowns();
+        }
+
+        function getSubstituteOptions() {
+            const selectedIndex = document.getElementById('teacherSelect').value;
+            let html = '<option value="">শিক্ষক নির্বাচন</option>';
+teachers.forEach(t => {
+    if (!t.Index) return; // ইনডেক্স না থাকলে স্কিপ
+    if (String(t.Index) !== String(selectedIndex)) {
+        html += `<option value="${t.TeacherFN}">${t.TeacherFN} (${t.Index})</option>`;
+    }
+});
+            return html;
+        }
+
+        function updateAllSubstituteDropdowns() {
+            const optionsHtml = getSubstituteOptions();
+            document.querySelectorAll('.sub-name').forEach(sel => {
+                const currentVal = sel.value;
+                sel.innerHTML = optionsHtml;
+                if (currentVal && [...sel.options].some(o => o.value === currentVal)) {
+                    sel.value = currentVal;
+                }
+            });
+        }
+
+        function toggleCustomInput(selectId, inputId) {
+            const select = document.getElementById(selectId);
+            const input = document.getElementById(inputId);
+            input.classList.toggle('hidden', select.value !== 'others');
+        }
+
+        function validateDates() {
+            const startStr = document.getElementById('startDate').value;
+            const endStr = document.getElementById('endDate').value;
+            if (startStr && endStr) {
+                const start = new Date(startStr);
+                const end = new Date(endStr);
+                if (end < start) {
+                    alert('ত্রুটি: ছুটি শেষের তারিখ শুরুর তারিখের আগে হতে পারে না।');
+                    document.getElementById('endDate').value = '';
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function calculateDays() {
+            const startStr = document.getElementById('startDate').value;
+            const endStr = document.getElementById('endDate').value;
+            if (startStr && endStr) {
+                const start = new Date(startStr);
+                const end = new Date(endStr);
+                if (end >= start) {
+                    return Math.ceil(Math.abs(end - start) / (1000 * 60 * 60 * 24)) + 1;
+                }
+            }
+            return 0;
+        }
+
+        function numberToBanglaWord(n) {
+            const words = {
+                1: 'এক', 2: 'দুই', 3: 'তিন', 4: 'চার', 5: 'পাঁচ', 
+                6: 'ছয়', 7: 'সাত', 8: 'আট', 9: 'নয়', 10: 'দশ',
+                11: 'এগারো', 12: 'বারো', 13: 'তেরো', 14: 'চৌদ্দ', 15: 'পনেরো',
+                16: 'ষোল', 17: 'সতেরো', 18: 'আঠারো', 19: 'উনিশ', 20: 'বিশ',
+                21: 'একুশ', 22: 'বাইশ', 23: 'তেইশ', 24: 'চব্বিশ', 25: 'পঁচিশ',
+                26: 'ছাব্বিশ', 27: 'সাতাশ', 28: 'আটাশ', 29: 'উনত্রিশ', 30: 'ত্রিশ',
+                31: 'একত্রিশ'
+            };
+            return words[n] || '';
+        }
+
+        function addSubstituteRow() {
+            const container = document.getElementById('substituteContainer');
+            const tomorrowDate = getTomorrowDateStr();
+            const div = document.createElement('div');
+            div.className = "sub-row";
+            div.innerHTML = `
+                <select class="sub-name">
+                    ${getSubstituteOptions()}
+                </select>
+                <select class="sub-class">
+                    <option value="">শ্রেণি</option>
+                    <option value="১ম">১ম</option><option value="২য়">২য়</option><option value="৩য়">৩য়</option>
+                    <option value="৪র্থ">৪র্থ</option><option value="৫ম">৫ম</option><option value="৬ষ্ঠ">৬ষ্ঠ</option>
+                    <option value="৭ম">৭ম</option><option value="৮ম">৮ম</option><option value="৯ম">৯ম</option>
+                    <option value="১০ম">১০ম</option><option value="আলিম ১ম">আলিম ১ম</option><option value="আলিম ২য়">আলিম ২য়</option>
+                    <option value="ফাযিল ১ম">ফাযিল ১ম</option><option value="ফাযিল ২য়">ফাযিল ২য়</option><option value="ফাযিল ৩য়">ফাযিল ৩য়</option>
+                </select>
+                <select class="sub-hour">
+                    <option value="">ঘণ্টা</option>
+                    <option value="১ম">১ম</option><option value="২য়">২য়</option><option value="৩য়">৩য়</option>
+                    <option value="৪র্থ">৪র্থ</option><option value="৫ম">৫ম</option><option value="৬ষ্ঠ">৬ষ্ঠ</option>
+                    <option value="৭ম">৭ম</option><option value="৮ম">৮ম</option>
+                </select>
+                <div class="sub-date-wrap" onclick="this.classList.add('has-date')">
+                    <input type="date" class="sub-date" value="${tomorrowDate}" onchange="if(this.value){this.parentElement.classList.add('has-date')}else{this.parentElement.classList.remove('has-date')}">
+                    <span class="sub-date-label">তারিখ</span>
+                </div>
+                <button onclick="this.parentElement.remove()" class="text-red-500 font-bold text-lg leading-none hover:text-red-700">✕</button>
+            `;
+            container.appendChild(div);
+        }
+
+        function replaceNumbers(input) {
+            if (input === null || input === undefined) return "";
+            const numbers = {'0':'০','1':'১','2':'২','3':'৩','4':'৪','5':'৫','6':'৬','7':'৭','8':'৮','9':'৯'};
+            return input.toString().replace(/[0-9]/g, w => numbers[w]);
+        }
+
+        function getBanglaDay(dateString) {
+            if (!dateString) return "";
+            const days = ['রবিবার', 'সোমবার', 'মঙ্গলবার', 'বুধবার', 'বৃহস্পতিবার', 'শুক্রবার', 'শনিবার'];
+            return days[new Date(dateString).getDay()];
+        }
+
+        function formatDateBangla(dateString) {
+            if (!dateString) return "";
+            const [y, m, d] = dateString.split('-');
+            return replaceNumbers(`${d}/${m}/${y}`);
+        }
+
+        function formatDateShortBangla(dateString) {
+            if (!dateString) return "";
+            const [y, m, d] = dateString.split('-');
+            const shortYear = y.slice(-2);
+            const dayNoLeadingZero = parseInt(d, 10);
+            const monthNoLeadingZero = parseInt(m, 10);
+            return replaceNumbers(`${dayNoLeadingZero}/${monthNoLeadingZero}/${shortYear}`);
+        }
+
+        function resetForm() {
+            document.getElementById('teacherSelect').value = '';
+            document.getElementById('leaveType').value = 'নৈমিত্তিক';
+            document.getElementById('customLeaveType').value = '';
+            document.getElementById('customLeaveType').classList.add('hidden');
+            document.getElementById('leaveReason').value = 'ব্যক্তিগত জরুরি কাজের কারণে';
+            document.getElementById('customLeaveReason').value = '';
+            document.getElementById('customLeaveReason').classList.add('hidden');
+            document.getElementById('startDate').value = getTomorrowDateStr();
+            document.getElementById('endDate').value = getTomorrowDateStr();
+
+            const container = document.getElementById('substituteContainer');
+            container.innerHTML = '';
+            addSubstituteRow();
+
+            const printArea = document.getElementById('printArea');
+            printArea.style.display = 'none';
+            printArea.innerHTML = '';
+            document.getElementById('downloadBtn').classList.add('hidden');
+
+            updateAllSubstituteDropdowns();
+        }
+
+        function generatePreview() {
+            const teacherSelect = document.getElementById('teacherSelect');
+            if (!teacherSelect.value) { 
+                alert("দয়া করে শিক্ষক নির্বাচন করুন।"); 
+                return; 
+            }
+
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            if (!startDate) {
+                alert("দয়া করে ছুটি শুরুর তারিখ নির্বাচন করুন।");
+                return;
+            }
+            if (!endDate) {
+                alert("দয়া করে ছুটি শেষের তারিখ নির্বাচন করুন।");
+                return;
+            }
+            if (!validateDates()) return;
+            
+            const selectedOption = teacherSelect.options[teacherSelect.selectedIndex];
+            const teacherName = selectedOption.dataset.teacherfn || selectedOption.text;
+            const designation = selectedOption.dataset.designation || '';
+            const mobile = selectedOption.dataset.mobile || '';
+
+            const lTypeSelect = document.getElementById('leaveType');
+            const leaveType = lTypeSelect.value === 'others' ? document.getElementById('customLeaveType').value : lTypeSelect.value;
+
+            const lReasonSelect = document.getElementById('leaveReason');
+            const leaveReason = lReasonSelect.value === 'others' ? document.getElementById('customLeaveReason').value : lReasonSelect.value;
+
+            const totalDaysNum = calculateDays();
+            const totalDaysFormatted = replaceNumbers(totalDaysNum);
+            const totalDaysInWords = numberToBanglaWord(totalDaysNum);
+            
+            const today = getTodayDateStr();
+
+            let dateText = "";
+            let prayTextDays = "";
+            if (totalDaysNum === 1 && startDate === endDate) {
+                dateText = `${formatDateBangla(startDate)} ইং তারিখ, রোজ ${getBanglaDay(startDate)} ${totalDaysFormatted} (${totalDaysInWords}) দিনের`;
+                prayTextDays = `দিনের`;
+            } else {
+                const totalDaysText = totalDaysInWords ? `${totalDaysFormatted} (${totalDaysInWords})` : totalDaysFormatted;
+                dateText = `${formatDateBangla(startDate)} ইং তারিখ, রোজ ${getBanglaDay(startDate)} থেকে ${formatDateBangla(endDate)} ইং তারিখ, রোজ ${getBanglaDay(endDate)} পর্যন্ত মোট ${totalDaysText} দিনের`;
+                prayTextDays = `${totalDaysText} দিনের`;
+            }
+
+            let subListHtml = "";
+            const names = document.querySelectorAll('.sub-name');
+            const hours = document.querySelectorAll('.sub-hour');
+            const classes = document.querySelectorAll('.sub-class');
+            const dates = document.querySelectorAll('.sub-date');
+            let hasSubstitutes = false;
+            
+            names.forEach((el, index) => {
+                if (el.value) {
+                    hasSubstitutes = true;
+                    const formattedSubDate = dates[index].value ? formatDateShortBangla(dates[index].value) : "";
+                    subListHtml += `<div class="ml-4">${replaceNumbers(index+1)}। ${el.value} - ${hours[index].value} ঘণ্টা, ${classes[index].value}${formattedSubDate ? ', তারিখ: ' + formattedSubDate : ''}</div>`;
+                }
+            });
+
+            let substituteSectionHtml = "";
+            if (hasSubstitutes) {
+                substituteSectionHtml = `
+                    <span style="display: inline;">আমার ছুটিকালীন সময়ে আমার ক্লাসের দায়িত্ব পালন করবেন:</span><br>
+                    <div style="line-height: 1.6; padding-left: 10px; margin-top: 5px;">
+                        ${subListHtml}
+                    </div>
+                `;
+            }
+
+            const content = `
+                <div class="preview-content-wrapper" style="font-family: 'Tiro Bangla', serif; color: black; background: white; width: 100%; box-sizing: border-box;">
+                    <div style="margin-bottom: 20px;">তারিখ: ${formatDateBangla(today)} ইং</div>
+                    
+                    <div style="margin-bottom: 30px;">
+                        বরাবর<br>
+                        ভারপ্রাপ্ত অধ্যক্ষ,<br>
+                        ${institutionName},<br>
+                        ${institutionAddress}
+                    </div>
+
+                    <div style="margin-bottom: 20px; font-weight: bold;">বিষয়: ${leaveType} ছুটির জন্য আবেদন।</div>
+
+                    <div class="preview-body-content">
+                         জনাব,<br>
+                        বিনীত নিবেদন এই যে, আমি ${teacherName}, অত্র প্রতিষ্ঠানে একজন ${designation} হিসেবে কর্মরত আছি। আমার ${leaveReason} আগামী ${dateText} ছুটি প্রয়োজন।${substituteSectionHtml}
+                        <div style="margin-top: 15px;">
+                            অতএব, মেহেরবানীপূর্বক আমাকে উক্ত ${prayTextDays} জন্য ${leaveType} ছুটি মঞ্জুর করতে আপনার আজ্ঞা হয়।
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 30px; font-weight: normal; line-height: 1.5; text-align: right; width: 50%; margin-left: auto;">
+                        বিনীত,<br>
+                        <div class="signature-line"></div>
+                        <b>${teacherName}</b><br>
+                        ${designation}<br>
+                        ${institutionName}<br>
+                        ${institutionAddress}<br>
+                        মোবাইল: ${replaceNumbers(mobile)}
+                    </div>
+                </div>
+            `;
+
+            const printArea = document.getElementById('printArea');
+            printArea.innerHTML = content;
+            printArea.style.display = 'block';
+            document.getElementById('downloadBtn').classList.remove('hidden');
+            
+            fitContentToA4();
+            
+            printArea.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function fitContentToA4() {
+            const container = document.getElementById('printArea');
+            const wrapper = container.querySelector('.preview-content-wrapper');
+            if (!wrapper) return;
+
+            // রিসেট আগের স্টাইল
+            container.style.transform = '';
+            container.style.transformOrigin = '';
+            container.style.marginBottom = '';
+            wrapper.style.transform = 'none';
+            wrapper.style.width = '100%';
+
+            const contentHeight = wrapper.scrollHeight;
+            const availableHeightPx = container.clientHeight - parseFloat(getComputedStyle(container).paddingTop) - parseFloat(getComputedStyle(container).paddingBottom);
+
+            // উচ্চতা ওভারফ্লো চেক — শুধুমাত্র wrapper স্কেল করা
+            if (contentHeight > availableHeightPx) {
+                const scaleFactor = availableHeightPx / contentHeight;
+                wrapper.style.transform = `scale(${scaleFactor})`;
+                wrapper.style.width = `${100 / scaleFactor}%`;
+            }
+        }
+
+        // ডাউনলোড ড্রপডাউন মেনু টগল
+        function toggleDownloadMenu() {
+            const menu = document.getElementById('downloadMenu');
+            menu.classList.toggle('active');
+        }
+
+        // মেনুর বাইরে ক্লিক করলে ড্রপডাউন বন্ধ হবে
+        document.addEventListener('click', function(e) {
+            const dropdown = document.querySelector('.download-dropdown');
+            const menu = document.getElementById('downloadMenu');
+            if (dropdown && !dropdown.contains(e.target)) {
+                menu.classList.remove('active');
+            }
+        });
+
+        // PDF হিসেবে ডাউনলোড
+        async function downloadAsPDF() {
+            const element = document.getElementById('printArea');
+            const menu = document.getElementById('downloadMenu');
+            menu.classList.remove('active');
+
+            document.getElementById('loadingOverlay').classList.add('active');
+            document.querySelector('#loadingOverlay .font-bold').textContent = 'PDF তৈরি হচ্ছে...';
+
+            try {
+                await document.fonts.ready;
+                await new Promise(resolve => setTimeout(resolve, 300));
+            } catch (e) {
+                console.warn('Font loading check skipped:', e);
+            }
+
+            fitContentToA4();
+            await new Promise(resolve => setTimeout(resolve, 200));
+
+            try {
+                const canvas = await html2canvas(element, {
+                    scale: 2,
+                    useCORS: true,
+                    letterRendering: true,
+                    scrollX: 0,
+                    scrollY: 0,
+                    width: element.offsetWidth,
+                    height: element.offsetHeight,
+                    backgroundColor: '#ffffff'
+                });
+
+                const { jsPDF } = window.jspdf;
+                const imgData = canvas.toDataURL('image/jpeg', 0.98);
+
+                // A4 সাইজ: 210mm x 297mm
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                const pdfWidth = 210;
+                const pdfHeight = 297;
+
+                pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+                pdf.save('Leave_Application.pdf');
+
+            } catch (err) {
+                console.error("PDF generation failed", err);
+                alert("PDF তৈরি করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।");
+            } finally {
+                document.getElementById('loadingOverlay').classList.remove('active');
+                document.querySelector('#loadingOverlay .font-bold').textContent = 'JPG তৈরি হচ্ছে...';
+            }
+        }
+
+        // ইমেজ (JPG) হিসেবে ডাউনলোড
+        async function downloadAsImage() {
+            const element = document.getElementById('printArea');
+            const menu = document.getElementById('downloadMenu');
+            menu.classList.remove('active');
+            
+            document.getElementById('loadingOverlay').classList.add('active');
+
+            try {
+                await document.fonts.ready;
+                await new Promise(resolve => setTimeout(resolve, 300));
+            } catch (e) {
+                console.warn('Font loading check skipped:', e);
+            }
+
+            fitContentToA4();
+            await new Promise(resolve => setTimeout(resolve, 200));
+
+            try {
+                const canvas = await html2canvas(element, {
+                    scale: 2,
+                    useCORS: true,
+                    letterRendering: true,
+                    scrollX: 0,
+                    scrollY: 0,
+                    width: element.offsetWidth,
+                    height: element.offsetHeight,
+                    backgroundColor: '#ffffff'
+                });
+
+                const link = document.createElement('a');
+                link.download = 'Leave_Application.jpg';
+                link.href = canvas.toDataURL('image/jpeg', 0.98);
+                link.click();
+
+            } catch (err) {
+                console.error("JPG generation failed", err);
+                alert("ইমেজ তৈরি করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।");
+            } finally {
+                document.getElementById('loadingOverlay').classList.remove('active');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initTeacherSelect();
+            addSubstituteRow();
+            // সব ডেট সিলেক্টরে আগামীকালের তারিখ ডিফল্ট হিসেবে সেট
+            const tomorrowDate = getTomorrowDateStr();
+            document.getElementById('startDate').value = tomorrowDate;
+            document.getElementById('endDate').value = tomorrowDate;
+        });
+    </script>
+</body>
+</html>

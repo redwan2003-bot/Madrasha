@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>অ্যাডমিন প্যানেল - ক্লাস মনিটরিং</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tiro+Bangla&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Tiro Bangla', serif; }
+        .tab-btn { transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
+        .tab-btn.active { border-color: #0d9488; background-color: #0d9488; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .toast { position: fixed; top: 20px; right: 20px; padding: 1rem 1.5rem; border-radius: 0.5rem; color: white; font-weight: bold; z-index: 1001; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transform: translateX(120%); transition: transform 0.5s ease-in-out; }
+        .toast.show { transform: translateX(0); }
+        .toast.success { background-color: #10B981; }
+        .toast.error { background-color: #EF4444; }
+        .spinner { display: none; width: 20px; height: 20px; border: 3px solid rgba(255, 255, 255, 0.3); border-radius: 50%; border-top-color: #ffffff; animation: spin 1s ease-in-out infinite; }
+        .spinner.active { display: inline-block; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .btn-loading { display: inline-flex; align-items: center; justify-content: center; gap: 0.75rem; cursor: not-allowed !important; opacity: 0.9; }
+        .z-60 { z-index: 60; }
+        #admin-duty-roster-container table { font-size: 1.05em; }
+        .flash-success { animation: flash-green 0.5s ease-out; }
+        @keyframes flash-green { 0% { background-color: #10B981; } 100% { background-color: #3b82f6; } }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+<nav class="bg-sky-800 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+            <!-- ডেস্কটপ মেনু -->
+            <div class="hidden md:flex items-center space-x-4">
+                <a href="/" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">মূল পাতা</a>
+                <a href="/office.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">অফিস প্যানেল</a>
+                <a href="/admin.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">এডমিন প্যানেল</a>
+                <a href="/sutdentdata.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">শিক্ষার্থী তথ্য</a>
+                <a href="/routine.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">ব্যক্তিগত রুটিন</a>
+                <a href="/weeklyroutine.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">সাপ্তাহিক রুটিন</a> 
+                <a href="/classwiseroutine.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">শ্রেণিভিত্তিক রুটিন</a> 
+                <a href="/classcount.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">শিক্ষকের সাপ্তাহিক ক্লাস বিবরণী</a>
+            </div>
+            <!-- মোবাইল মেনু বাটন (হ্যামবার্গার আইকন) -->
+            <div class="md:hidden flex items-center">
+                <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
+                    <span class="sr-only">Open main menu</span>
+                    <!-- Icon when menu is closed -->
+                    <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                    <!-- Icon when menu is open (optional, for better UX) -->
+                    <svg class="hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- ডানপাশের ফাঁকা জায়গা পূরণের জন্য (ঐচ্ছিক) -->
+            <div class="hidden md:block">
+                 <div class="w-px h-px"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- মোবাইল মেনু, যা বাটনে ক্লিক করলে দেখা যাবে -->
+   <div class="md:hidden hidden" id="mobile-menu">
+        <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            <a href="/" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">মূল পাতা</a>
+            <a href="/office.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">অফিস প্যানেল</a>
+            <a href="/admin.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">এডমিন প্যানেল</a>
+            <a href="/sutdentdata.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md font-medium">শিক্ষার্থী তথ্য</a>
+            <a href="/routine.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">ব্যক্তিগত রুটিন</a>
+            <a href="/weeklyroutine.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md font-medium">সাপ্তাহিক রুটিন</a>                
+            <a href="/classwiseroutine.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md font-medium">শ্রেণিভিত্তিক রুটিন</a> 
+            <a href="/classcount.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md font-medium">শিক্ষকের ক্লাস বিবরণী</a>
+        </div>
+    </div>
+</nav>
+
+<!-- মোবাইল মেনু কাজ করার জন্য প্রয়োজনীয় জাভাস্ক্রিপ্ট -->
+<script>
+    //DOMContentLoaded অপেক্ষা করে যাতে DOM এলিমেন্টগুলো লোড হয়
+    document.addEventListener('DOMContentLoaded', () => {
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const icons = mobileMenuButton.querySelectorAll('svg');
+
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+            // আইকন পরিবর্তন করার জন্য (বন্ধ/খোলা)
+            icons.forEach(icon => icon.classList.toggle('hidden'));
+        });
+    });
+</script>
+    <main class="w-full max-w-4xl mx-auto bg-white p-6 md:p-8 rounded-b-xl shadow-2xl border border-gray-200">
+        <header class="text-center mb-8">
+            <h1 class="text-2xl font-bold text-gray-800">শিবগঞ্জ ফাযিল ডিগ্রী মাদ্রাসা</h1>
+            <p class="text-md text-gray-600">শিবগঞ্জ-৫৮১০, বগুড়া।</p>
+        </header>
+
+        <section id="login-section" class="max-w-sm mx-auto">
+            <h2 class="text-xl font-bold text-teal-700 mb-6 text-center">অ্যাডমিন লগইন</h2>
+            <form id="admin-login-form" class="space-y-4">
+                <div>
+                    <label for="admin-password" class="block text-md font-medium text-gray-700">পাসওয়ার্ড</label>
+                    <input type="password" id="admin-password" name="password" class="text-center mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm" required>
+                </div>
+                <button type="submit" id="admin-login-btn" class="w-full inline-flex justify-center py-3 px-8 border border-transparent shadow-sm text-lg font-medium rounded-md text-white bg-teal-600 hover:bg-teal-700">
+                    <span>প্রবেশ করুন</span>
+                    <div class="spinner"></div>
+                </button>
+            </form>
+        </section>
+
+        <div id="admin-panel" class="hidden">
+            <h2 class="text-xl font-bold text-teal-700 mb-6 text-center">অ্যাডমিন কন্ট্রোল প্যানেল</h2>
+            
+            <div class="border-b border-gray-200">
+                <nav class="flex flex-wrap -mb-px" aria-label="Tabs">
+                    <button class="tab-btn active flex-1 md:flex-none text-center whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm" data-tab="tab-manage">ব্যবস্থাপনা</button>
+                    <button class="tab-btn flex-1 md:flex-none text-center whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm" data-tab="tab-reports">রিপোর্ট</button>
+                    <button class="tab-btn flex-1 md:flex-none text-center whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm" data-tab="tab-monitoring">মনিটরিং</button>
+                </nav>
+            </div>
+
+            <div class="mt-6">
+                <!-- Management Tab -->
+                <div id="tab-manage" class="tab-content active space-y-8">
+                    <section id="teacher-search-component" class="p-4 border rounded-lg bg-gray-50">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">শিক্ষক নির্বাচন করুন</h3>
+                        <div class="space-y-4">
+                            <input type="text" id="teacher-search-index" class="w-full p-2 border rounded-md" placeholder="ইনডেক্স নম্বর দিয়ে খুঁজুন...">
+                            <div class="flex items-center text-gray-500 my-2">
+                                <hr class="flex-grow border-t border-gray-300"><span class="px-2">অথবা</span><hr class="flex-grow border-t border-gray-300">
+                            </div>
+                            <div class="flex space-x-2">
+                                <select id="teacher-search-level" class="w-1/2 p-2 border rounded-md">
+                                    <option value="">-- স্তর নির্বাচন করুন --</option>
+                                </select>
+                                <select id="teacher-search-name" class="w-1/2 p-2 border rounded-md" disabled>
+                                    <option value="">-- নাম নির্বাচন করুন --</option>
+                                </select>
+                            </div>
+                        </div>
+                    </section>
+                    <section class="p-4 border rounded-lg">
+                        <h3 class="text-lg font-semibold mb-2 text-gray-700">ছুটি ব্যবস্থাপনা</h3>
+                        <div id="leave-selected-teacher" class="selected-teacher-display p-3 bg-teal-50 rounded text-center text-teal-800 font-bold hidden mb-4"></div>
+                        <form id="leave-manage-form" class="space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div><label class="block text-sm font-medium">ছুটি শুরু</label><input type="date" name="leaveStart" class="w-full p-2 border rounded-md" required></div>
+                                <div><label class="block text-sm font-medium">ছুটি শেষ</label><input type="date" name="leaveEnd" class="w-full p-2 border rounded-md" required></div>
+                            </div>
+                            <div><label class="block text-sm font-medium">ছুটির ধরন</label><select name="leaveType" class="w-full p-2 border rounded-md"><option>নৈমিত্তিক</option><option>অসুস্থতাজনিত</option><option>প্রশিক্ষণ</option><option>অফিস ডিউটি</option><option>উত্তরপত্র গ্রহণ</option><option>সরকারি কাজ</option></select></div>
+                            <div><label class="block text-sm font-medium">বদলি দায়িত্বপ্রাপ্ত শিক্ষক (মন্তব্য)</label><select multiple name="substituteTeachers" id="substitute-teacher-select" class="w-full p-2 border rounded-md h-24"></select></div>
+                            <button type="submit" class="w-full inline-flex justify-center items-center py-2 px-4 rounded-md text-white bg-teal-600 hover:bg-teal-700"><span>ছুটি যোগ করুন</span><div class="spinner"></div></button>
+                        </form>
+                    </section>
+                    <section class="p-4 border rounded-lg">
+                        <h3 class="text-lg font-semibold mb-2 text-gray-700">বার্তা নিয়ন্ত্রণ</h3>
+                        <form id="message-manage-form" class="space-y-4">
+                            <div><label for="message-key-select" class="block text-sm font-medium">কোন সিস্টেম বার্তাটি পরিবর্তন করবেন?</label><select id="message-key-select" name="messageKey" class="w-full p-2 border rounded-md mb-2"><option value="OfficeLetter">স্ক্রলিং নোটিশ (মূল পাতা)</option><option value="fridayMessage">শুক্রবার বার্তা</option><option value="saturdayMessage">শনিবার বার্তা</option><option value="MssToTeachers">শিক্ষকদের জন্য বার্তা</option><option value="LeaveMessage">ছুটির পাতার বার্তা</option><option value="MonitorInstruction">মনিটরের জন্য নির্দেশনা</option></select></div>
+                            <div><label for="message-edit-textarea" class="block text-sm font-medium">বার্তার নতুন লেখা</label><textarea id="message-edit-textarea" name="newMessage" class="w-full p-2 border rounded-md" rows="3" placeholder="এখানে নতুন বার্তা লিখুন..."></textarea></div>
+                            <button type="button" id="update-system-message-btn" class="w-full inline-flex justify-center items-center py-2 px-4 rounded-md text-white bg-teal-600 hover:bg-teal-700"><span>সিস্টেম বার্তা আপডেট করুন</span><div class="spinner"></div></button>
+                            <button type="button" id="add-new-message-btn" class="w-full mt-2 inline-flex justify-center items-center py-2 px-4 rounded-md text-white bg-indigo-500 hover:bg-indigo-600"><span>নতুন বার্তা সংরক্ষণ করুন</span><div class="spinner"></div></button>
+                        </form>
+                       <div class="mt-4"><h4 class="text-md font-semibold text-gray-600 mb-2">সংরক্ষিত বার্তা তালিকা</h4><div id="saved-messages-container" class="mt-2 space-y-2 max-h-48 overflow-y-auto p-2 bg-gray-50 rounded"><p class="text-center text-gray-400">কোনো সংরক্ষিত বার্তা নেই।</p></div></div>
+                    </section>
+                    <section class="p-4 border rounded-lg">
+                        <h3 class="text-lg font-semibold mb-2 text-gray-700">মনিটর ব্যবস্থাপনা</h3>
+                        <div id="monitor-selected-teacher" class="selected-teacher-display p-3 bg-teal-50 rounded text-center text-teal-800 font-bold hidden mb-4"></div>
+                        <form id="monitor-manage-form" class="space-y-4">
+                            <div><label class="block text-md font-medium text-gray-700">দায়িত্বের দিন(গুলো)</label><div id="monitor-days-checkboxes" class="mt-2 grid grid-cols-3 sm:grid-cols-5 gap-4"><div><input type="checkbox" id="day-sun" name="monitorDay" value="রবিবার" class="h-4 w-4"><label for="day-sun" class="ml-2">রবি</label></div><div><input type="checkbox" id="day-mon" name="monitorDay" value="সোমবার" class="h-4 w-4"><label for="day-mon" class="ml-2">সোম</label></div><div><input type="checkbox" id="day-tue" name="monitorDay" value="মঙ্গলবার" class="h-4 w-4"><label for="day-tue" class="ml-2">মঙ্গল</label></div><div><input type="checkbox" id="day-wed" name="monitorDay" value="বুধবার" class="h-4 w-4"><label for="day-wed" class="ml-2">বুধ</label></div><div><input type="checkbox" id="day-thu" name="monitorDay" value="বৃহস্পতিবার" class="h-4 w-4"><label for="day-thu" class="ml-2">বৃহঃ</label></div></div></div>
+                            <div><label for="mon-comment" class="block text-md font-medium text-gray-700">ভূমিকা/মন্তব্য</label><input id="mon-comment" name="monComment" class="w-full p-2 border rounded-md" placeholder="e.g., টিম প্রধান"></div>
+                                 <div><label class="block text-md font-medium text-gray-700">স্ট্যাটাস</label><select name="status" class="w-full p-2 border rounded-md"><option value="On">On</option><option value="Off">Off</option></select></div>
+                            <button type="submit" class="w-full inline-flex justify-center items-center py-2 px-4 rounded-md text-white bg-teal-600 hover:bg-teal-700"><span>দায়িত্ব সেভ করুন</span><div class="spinner"></div></button>
+                        </form>
+                    </section>
+                    <section class="p-4 border rounded-lg">
+                        <h3 class="text-lg font-semibold mb-2 text-gray-700">শিক্ষক তথ্য সম্পাদন</h3>
+                        <div id="edit-selected-teacher" class="selected-teacher-display p-3 bg-teal-50 rounded text-center text-teal-800 font-bold hidden mb-4"></div>
+                        <form id="teacher-edit-form" class="space-y-4">
+                            <div><label class="block text-sm font-medium">ইনডেক্স</label><input type="text" name="Index" class="w-full p-2 border rounded-md bg-gray-100" readonly></div>
+                            <div><label class="block text-sm font-medium">নাম</label><input type="text" name="TeacherFN" class="w-full p-2 border rounded-md"></div>
+                                 <div><label class="block text-sm font-medium">বর্তমান ঠিকানা</label><textarea name="TcrAddress" class="w-full p-2 border rounded-md" rows="3"></textarea></div>
+                            <div><label class="block text-sm font-medium">বিষয়</label><input type="text" name="TeacherSub" class="w-full p-2 border rounded-md"></div>
+                            <div><label class="block text-sm font-medium">মোবাইল নম্বর</label><input type="text" name="MobileNo" class="w-full p-2 border rounded-md"></div>
+                            <button type="submit" class="w-full inline-flex justify-center items-center py-2 px-4 rounded-md text-white bg-teal-600 hover:bg-teal-700"><span>আপডেট করুন</span><div class="spinner"></div></button>
+                        </form>
+                    </section>
+                    <section class="p-4 border rounded-lg">
+                        <h3 class="text-lg font-semibold mb-2 text-gray-700">পাসওয়ার্ড পুনরুদ্ধার</h3>
+                        <div id="recovery-selected-teacher" class="selected-teacher-display p-3 bg-teal-50 rounded text-center text-teal-800 font-bold hidden mb-4"></div>
+                        <div id="password-recovery-section" class="space-y-4"><div class="p-3 bg-blue-50 rounded text-center text-blue-800 font-bold">পাসওয়ার্ড: <span id="recovered-password">[শিক্ষক নির্বাচন করুন]</span></div><textarea id="password-sms-message" class="w-full p-2 border rounded-md bg-gray-50" rows="4" readonly></textarea><button type="button" id="copy-sms-btn" class="w-full py-2 px-4 rounded-md text-white bg-indigo-600 hover:bg-indigo-700">মেসেজ কপি করুন</button></div>
+                    </section>
+                </div>
+                
+                <!-- Reports Tab -->
+                <div id="tab-reports" class="tab-content">
+                    <section class="p-4 border rounded-lg">
+                        <h3 class="text-lg font-semibold mb-4 text-gray-700">রিপোর্ট জেনারেশন</h3>
+                        
+                        <div id="report-form-controls-main" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium">রিপোর্টের ধরন</label>
+                                <select id="report-type-main" class="w-full p-2 border rounded-md">
+                                    <option value="student-attendance">শিক্ষার্থী হাজিরা</option>
+                                    <option value="teacher-reports">শিক্ষক রিপোর্ট</option>
+                                </select>
+                            </div>
+                            <div id="teacher-reports-section" class="hidden">
+                                <label class="block text-sm font-medium">শিক্ষক রিপোর্টের ধরন</label>
+                                <select id="teacher-report-type-sub" class="w-full p-2 border rounded-md">
+                                    <option value="leave">ছুটি সংক্রান্ত</option>
+                                    <option value="class">ক্লাস সংক্রান্ত</option>
+                                    <option value="monitoring">মনিটরিং দায়িত্ব</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- NEW: Leave Report Specific Controls -->
+                        <div id="leave-report-section-container" class="hidden space-y-4 mt-4">
+                            <h4 class="text-md font-semibold text-gray-700 pt-4 border-t">ব্যক্তিগত ছুটির কার্ড</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                                <div class="md:col-span-1">
+                                    <label for="leave-card-level-select" class="block text-sm font-medium">স্তর বাছাই করুন</label>
+                                    <select id="leave-card-level-select" class="w-full p-2 border rounded-md"></select>
+                                </div>
+                                <div class="md:col-span-1">
+                                    <label for="leave-card-teacher-select" class="block text-sm font-medium">শিক্ষক বাছাই করুন</label>
+                                    <select id="leave-card-teacher-select" class="w-full p-2 border rounded-md" disabled></select>
+                                </div>
+                                <div class="md:col-span-1">
+                                    <button type="button" id="show-leave-card-btn" class="w-full py-2 px-4 rounded-md text-white bg-indigo-600 hover:bg-indigo-700 inline-flex justify-center items-center">
+                                        <span>কার্ড দেখুন</span>
+                                        <div class="spinner"></div>
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="leave-card-container" class="mt-4"></div>
+                            <div id="leave-card-download-buttons" class="hidden flex justify-center items-center space-x-4 mt-4">
+                                <button type="button" id="download-html-card-btn" class="py-2 px-4 rounded-md text-white bg-green-600 hover:bg-green-700">কার্ড (ওয়েব)</button>
+                                <button type="button" id="download-doc-card-btn" class="py-2 px-4 rounded-md text-white bg-purple-600 hover:bg-purple-700">কার্ড (ডক)</button>
+                                <button type="button" id="download-image-card-btn" class="py-2 px-4 rounded-md text-white bg-blue-600 hover:bg-blue-700">কার্ড (ইমেজ)</button>
+                            </div>
+                            <h4 class="text-md font-semibold text-gray-700 pt-4 border-t">সার্বিক ছুটির রিপোর্ট</h4>
+                            <p class="text-sm text-gray-500">সকল শিক্ষকের ছুটির তালিকা দেখতে নিচের 'রিপোর্ট' বাটনে ক্লিক করুন। কোনো তারিখ বা সময়সীমা বাছাই করার প্রয়োজন নেই।</p>
+                        </div>
+                        
+                        <form id="report-generation-form" class="space-y-4">
+                            <div id="timeframe-selection-container" class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium">সময়সীমা</label>
+                                    <select id="report-timeframe" class="w-full p-2 border rounded-md">
+                                        <!-- Options will be dynamically populated by JS -->
+                                    </select>
+                                </div>
+                                <div id="date-selector-container" class="space-y-4 mt-4">
+                                    <div id="daily-weekly-picker">
+                                        <label class="block text-sm font-medium">তারিখ নির্বাচন করুন</label>
+                                        <input type="date" id="single-date-picker" class="w-full p-2 border rounded-md">
+                                    </div>
+                                    <div id="monthly-picker" class="hidden grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium">মাস</label>
+                                            <select id="month-select" class="w-full p-2 border rounded-md"></select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium">বছর</label>
+                                            <select id="year-select" class="w-full p-2 border rounded-md"></select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                             <div class="flex justify-end items-center space-x-4">
+                                <button type="button" id="generate-report-btn" class="py-2 px-4 rounded-md text-white bg-blue-600 hover:bg-blue-700 inline-flex justify-center items-center"><span>রিপোর্ট</span><div class="spinner"></div></button>
+                            </div>
+                        </form>
+                        <div class="flex justify-end items-center space-x-4 mt-4">
+                            <button type="button" id="close-report-btn" class="py-2 px-4 rounded-md text-white bg-red-600 hover:bg-red-700 hidden">বন্ধ</button>
+                            <div id="download-buttons-container" class="hidden flex items-center space-x-4">
+                                <button type="button" id="download-html-btn" class="py-2 px-4 rounded-md text-white bg-green-600 hover:bg-green-700">ওয়েব</button>
+                                <button type="button" id="download-doc-btn" class="py-2 px-4 rounded-md text-white bg-purple-600 hover:bg-purple-700">ডক</button>
+                                <button type="button" id="download-image-btn" class="py-2 px-4 rounded-md text-white bg-blue-600 hover:bg-blue-700">ইমেজ</button>
+                            </div>
+                        </div>
+
+                        <div id="report-preview" class="mt-6 border-t pt-4 overflow-x-auto"></div>
+                    </section>
+                </div>
+
+                <!-- Monitoring Tab -->
+                <div id="tab-monitoring" class="tab-content space-y-8">
+                    <section class="p-4 border rounded-lg bg-gray-50"><h3 class="text-lg font-semibold text-gray-800 mb-3 text-center">নির্দিষ্ট দিনের মনিটরিং দেখুন</h3><div class="max-w-xs mx-auto"><label for="monitoring-date-picker" class="block text-sm font-medium text-gray-700 mb-1">তারিখ নির্বাচন করুন:</label><input type="date" id="monitoring-date-picker" class="p-2 border rounded-md w-full shadow-sm"></div></section>
+                    <section><h4 class="text-xl font-bold text-gray-800 mt-4 mb-2 text-center">ডিউটি তালিকা</h4><div id="admin-duty-roster-container" class="mb-6 bg-white p-3 rounded-lg shadow-inner min-h-[100px]"><p class="text-center text-gray-500">একটি তারিখ নির্বাচন করুন।</p></div></section>
+                    <section><h4 class="text-xl font-bold text-gray-800 mt-8 mb-2 text-center">মনিটরগণ</h4><div id="admin-monitor-team-list" class="space-y-4 min-h-[100px]"><p class="text-center text-gray-500">একটি তারিখ নির্বাচন করুন।</p></div></section>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modals -->
+    <div id="toast-container"></div>
+    
+    <!-- Monitor Report Form Modal -->
+    <div id="monitor-form-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-60 p-4">
+        <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
+            <h3 class="text-xl text-teal-700 mb-4 text-center">মনিটর ফর্ম</h3>
+            <form id="monitor-form" class="space-y-4 text-left">
+                <input type="hidden" id="monitor-form-index">
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="monitor-form-date" class="block text-sm font-medium text-gray-700">তারিখ</label>
+                        <input type="date" id="monitor-form-date" class="mt-1 block w-full p-2 border rounded-md">
+                    </div>
+                    <div>
+                        <label for="monitor-form-period-select" class="block text-sm font-medium text-gray-700">পিরিয়ড</label>
+                        <select id="monitor-form-period-select" class="mt-1 block w-full p-2 border rounded-md"></select>
+                    </div>
+                </div>
+
+                <div><label for="monitor-form-level" class="block text-sm font-medium text-gray-700">স্তর নির্বাচন করুন</label><select id="monitor-form-level" class="mt-1 block w-full p-2 border rounded-md" required><option value="" disabled selected>-- স্তর --</option></select></div>
+                <div><label for="monitor-form-class" class="block text-sm font-medium text-gray-700">শ্রেণি নির্বাচন করুন</label><select id="monitor-form-class" class="mt-1 block w-full p-2 border rounded-md" required disabled><option value="" disabled selected>-- শ্রেণি --</option></select></div>
+                <div><label class="block text-sm font-medium text-gray-700">ক্লাসের শিক্ষক</label><input type="text" id="monitor-form-teacher" class="mt-1 block w-full p-2 border bg-gray-100 rounded-md">
+<select id="monitor-form-teacher-select" class="hidden mt-1 w-full p-2 border rounded-md bg-white">
+    <!-- জাভাস্ক্রিপ্ট এখানে শিক্ষকদের নাম যোগ করবে -->
+</select>
+</div>
+                <div><label for="monitor-form-attendance" class="block text-sm font-medium text-gray-700">শিক্ষার্থী উপস্থিতি</label><input type="number" id="monitor-form-attendance" class="mt-1 block w-full p-2 border rounded-md" required placeholder="উপস্থিত শিক্ষার্থীর সংখ্যা"></div>
+                <div><label class="block text-sm font-medium text-gray-700 mb-2">রিপোর্ট</label><div class="space-y-2"><div class="flex items-center"><input type="checkbox" id="report-ok" class="h-4 w-4"><label for="report-ok" class="ml-2 text-gray-800">ঠিক আছে</label></div><div class="flex items-center"><input type="checkbox" id="report-no-students" class="h-4 w-4"><label for="report-no-students" class="ml-2 text-gray-800">শিক্ষার্থী নেই</label></div><div class="flex items-center"><input type="checkbox" id="report-absent" class="h-4 w-4"><label for="report-absent" class="ml-2 text-gray-800">শিক্ষক অনুপস্থিত</label></div><div class="flex items-center space-x-2"><input type="checkbox" id="report-late" class="h-4 w-4"><input type="number" id="report-late-min" class="w-16 p-1 border rounded-md text-center" placeholder="মিনিট"><label for="report-late" class="text-gray-800">মিনিট পরে প্রবেশ</label></div><div class="flex items-center space-x-2"><input type="checkbox" id="report-early" class="h-4 w-4"><input type="number" id="report-early-min" class="w-16 p-1 border rounded-md text-center" placeholder="মিনিট"><label for="report-early" class="text-gray-800">মিনিট আগে প্রস্থান</label></div><div class="flex items-start space-x-2 pt-2"><input type="checkbox" id="report-extra-info" class="h-4 w-4 mt-1"><label for="report-extra-info" class="text-gray-800">আরও তথ্য:</label><textarea id="report-extra-info-text" rows="2" class="w-full p-1 border rounded-md" placeholder="এখানে লিখুন..."></textarea></div></div></div>
+                <div class="mt-6 flex justify-end space-x-2">
+                    <button type="button" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg cancel-modal">বাতিল</button>
+                    <button type="button" id="save-monitor-report-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center justify-center">
+                        <span>সেভ করুন</span>
+                        <div class="spinner ml-2"></div>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Reassign Duty Modal -->
+    <div id="reassign-duty-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-60 p-4">
+        <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
+            <h3 class="text-xl text-teal-700 mb-4 text-center">ডিউটি পুনর্বণ্টন করুন</h3>
+            <form id="reassign-duty-form" class="space-y-4 text-left">
+                <input type="hidden" id="reassign-date"><input type="hidden" id="reassign-period"><input type="hidden" id="reassign-original-monitor-index">
+                <div><label class="block text-sm font-medium text-gray-700">পিরিয়ড</label><p id="reassign-period-text" class="mt-1 p-2 bg-gray-100 rounded-md"></p></div>
+                <div><label class="block text-sm font-medium text-gray-700">বর্তমান মনিটর</label><p id="reassign-original-monitor-text" class="mt-1 p-2 bg-gray-100 rounded-md"></p></div>
+                <div><label for="reassign-new-monitor-select" class="block text-sm font-medium text-gray-700">নতুন মনিটর নির্বাচন করুন</label><select id="reassign-new-monitor-select" class="mt-1 block w-full p-2 border rounded-md" required></select></div>
+                <div class="mt-6 flex justify-end space-x-4"><button type="button" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg cancel-modal">বাতিল</button><button type="submit" class="bg-teal-600 hover:bg-teal-700 text-white px-6 py-2 rounded-lg">নিশ্চিত করুন</button></div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Floating Batch Submit Button -->
+    <div id="batch-submit-container" class="hidden fixed bottom-4 right-4 z-50">
+        <button id="batch-submit-button" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-5 rounded-full shadow-lg flex items-center space-x-2">
+            <span id="saved-reports-count" class="bg-white text-purple-600 rounded-full px-2 text-sm font-bold">0</span>
+            <span>সবগুলো জমা দিন</span>
+            <div class="spinner"></div>
+        </button>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const API_URL = "https://sfdm.xyz/api/api.php";
+
+        let AppState = {
+            isLoggedIn: false,
+            allAdminData: {},
+            monitoringData: {},
+            selectedTeacher: null,
+            searchTimer: null,
+            formSpecificData: {},
+            savedReports: []
+        };
+
+        const DOMElements = {
+            loginSection: document.getElementById('login-section'),
+            adminPanel: document.getElementById('admin-panel'),
+            loginForm: document.getElementById('admin-login-form'),
+            tabButtons: document.querySelectorAll('.tab-btn'),
+            tabContents: document.querySelectorAll('.tab-content'),
+            toastContainer: document.getElementById('toast-container'),
+            teacherSearch: { index: document.getElementById('teacher-search-index'), level: document.getElementById('teacher-search-level'), name: document.getElementById('teacher-search-name') },
+            selectedTeacherDisplays: document.querySelectorAll('.selected-teacher-display'),
+            forms: { leave: document.getElementById('leave-manage-form'), message: document.getElementById('message-manage-form'), monitor: document.getElementById('monitor-manage-form'), teacherEdit: document.getElementById('teacher-edit-form'), report: document.getElementById('report-generation-form') },
+            messageManagement: { keySelect: document.getElementById('message-key-select'), textarea: document.getElementById('message-edit-textarea'), updateBtn: document.getElementById('update-system-message-btn'), addBtn: document.getElementById('add-new-message-btn'), savedContainer: document.getElementById('saved-messages-container') },
+            substituteTeacherSelect: document.getElementById('substitute-teacher-select'),
+            passwordRecovery: { recoveredPassword: document.getElementById('recovered-password'), smsMessage: document.getElementById('password-sms-message'), copyBtn: document.getElementById('copy-sms-btn') },
+            reportGeneration: { 
+                mainControls: document.getElementById('report-form-controls-main'),
+                mainTypeSelect: document.getElementById('report-type-main'), 
+                teacherSection: document.getElementById('teacher-reports-section'), 
+                teacherSubtypeSelect: document.getElementById('teacher-report-type-sub'), 
+                timeframeContainer: document.getElementById('timeframe-selection-container'), 
+                timeframeSelect: document.getElementById('report-timeframe'), 
+                dailyWeeklyPicker: document.getElementById('daily-weekly-picker'), 
+                monthlyPicker: document.getElementById('monthly-picker'), 
+                singleDatePicker: document.getElementById('single-date-picker'), 
+                monthSelect: document.getElementById('month-select'), 
+                yearSelect: document.getElementById('year-select'), 
+                generateBtn: document.getElementById('generate-report-btn'), 
+                closeBtn: document.getElementById('close-report-btn'), 
+                downloadContainer: document.getElementById('download-buttons-container'), 
+                downloadHtmlBtn: document.getElementById('download-html-btn'), 
+                downloadDocBtn: document.getElementById('download-doc-btn'),
+                downloadImageBtn: document.getElementById('download-image-btn'), 
+                previewDiv: document.getElementById('report-preview') 
+            },
+            leaveReport: {
+                container: document.getElementById('leave-report-section-container'),
+                levelSelect: document.getElementById('leave-card-level-select'),
+                teacherSelect: document.getElementById('leave-card-teacher-select'),
+                showCardBtn: document.getElementById('show-leave-card-btn'),
+                cardContainer: document.getElementById('leave-card-container'),
+                downloadContainer: document.getElementById('leave-card-download-buttons'),
+                downloadHtmlBtn: document.getElementById('download-html-card-btn'),
+                downloadDocBtn: document.getElementById('download-doc-card-btn'),
+                downloadImageBtn: document.getElementById('download-image-card-btn')
+            },
+            monitoringDatePicker: document.getElementById('monitoring-date-picker'),
+            dutyRosterContainer: document.getElementById('admin-duty-roster-container'),
+            monitorTeamContainer: document.getElementById('admin-monitor-team-list'),
+            monitorFormModal: document.getElementById('monitor-form-modal'),
+            reassignDutyModal: document.getElementById('reassign-duty-modal'),
+            batchSubmitContainer: document.getElementById('batch-submit-container'),
+            savedReportsCount: document.getElementById('saved-reports-count'),
+            batchSubmitBtn: document.getElementById('batch-submit-button')
+        };
+        
+        // --- Helper Functions ---
+        function showToast(message, type = 'success') { const toast = document.createElement('div'); toast.textContent = message; toast.className = `toast ${type}`; DOMElements.toastContainer.appendChild(toast); setTimeout(() => { toast.classList.add('show'); setTimeout(() => { toast.classList.remove('show'); setTimeout(() => DOMElements.toastContainer.removeChild(toast), 500); }, 3000); }, 100); }
+        
+        function showLoadingState(btn, loadingText = 'লোড হচ্ছে...') {
+            if (!btn) return;
+            const btnTextSpan = btn.id === 'batch-submit-button' ? btn.querySelector('span:last-of-type') : btn.querySelector('span');
+            const spinner = btn.querySelector('.spinner');
+            if (btnTextSpan) {
+                btn.dataset.originalText = btnTextSpan.textContent;
+                btnTextSpan.textContent = loadingText;
+            }
+            if(btn) btn.disabled = true;
+            if(btn) btn.classList.add('btn-loading');
+            if (spinner) spinner.classList.add('active');
+        }
+
+        function hideLoadingState(btn) {
+            if (!btn) return;
+            const btnTextSpan = btn.id === 'batch-submit-button' ? btn.querySelector('span:last-of-type') : btn.querySelector('span');
+            const spinner = btn.querySelector('.spinner');
+            if(btn) btn.disabled = false;
+            if(btn) btn.classList.remove('btn-loading');
+            if (btnTextSpan && btn.dataset.originalText) {
+                btnTextSpan.textContent = btn.dataset.originalText;
+            }
+            if (spinner) spinner.classList.remove('active');
+        }
+
+        async function handleApiCall(formData, btn) { showLoadingState(btn); try { const response = await fetch(API_URL, { method: 'POST', body: formData }); if (!response.ok) throw new Error('Network response was not ok'); const result = await response.json(); if (result.status === 'error') throw new Error(result.message); return result; } catch (error) { showToast(error.message, 'error'); console.error("API Call failed:", error); return null; } finally { hideLoadingState(btn); } }
+        
+        function formatBengaliDate(dateString_dmy) {
+            if (dateString_dmy && typeof dateString_dmy === 'string' && dateString_dmy.includes('-')) {
+                // Handles YYYY-MM-DD format from class report
+                try {
+                    const date = new Date(dateString_dmy);
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const year = String(date.getFullYear()).slice(-2);
+                    return `${convertEnglishToBanglaNumerals(day)}/${convertEnglishToBanglaNumerals(month)}/${convertEnglishToBanglaNumerals(year)}`;
+                } catch(e) {
+                    return dateString_dmy;
+                }
+            }
+            if (dateString_dmy && typeof dateString_dmy === 'string' && dateString_dmy.includes('/')) {
+                // Handles dd/mm/yy format from student attendance report
+                try {
+                    const parts = dateString_dmy.split('/');
+                    return `${convertEnglishToBanglaNumerals(parts[0])}/${convertEnglishToBanglaNumerals(parts[1])}/${convertEnglishToBanglaNumerals(parts[2])}`;
+                } catch (e) {
+                    return dateString_dmy;
+                }
+            }
+            return dateString_dmy; // Fallback
+        }
+
+        function convertEnglishToBanglaNumerals(input) { if (input === undefined || input === null || input === 'N/A' || input === '') return input; const str = String(input); const banglaNumerals = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯']; return str.replace(/[0-9.-]/g, (match) => { if (match === '.' || match === '-') return match; return banglaNumerals[parseInt(match)]; }); }
+        const TEACHING_PERIODS = ['১ম ঘণ্টা', '২য় ঘণ্টা', '৩য় ঘণ্টা', '৪র্থ ঘণ্টা', '৫ম ঘণ্টা', '৬ষ্ঠ ঘণ্টা', '৭ম ঘণ্টা', '৮ম ঘণ্টা'];
+
+        // --- Login & Initial Setup ---
+        DOMElements.loginForm.addEventListener('submit', async (e) => { e.preventDefault(); const btn = e.target.querySelector('button[type="submit"]'); const formData = new FormData(DOMElements.loginForm); formData.append('action', 'adminLogin'); const result = await handleApiCall(formData, btn); if (result && result.status === 'success') { AppState.isLoggedIn = true; DOMElements.loginSection.classList.add('hidden'); DOMElements.adminPanel.classList.remove('hidden'); initializeAdminPanel(); } });
+        
+        async function initializeAdminPanel() { 
+            const allDataFormData = new FormData(); 
+            allDataFormData.append('action', 'getAllDataForAdmin'); 
+            const result = await handleApiCall(allDataFormData); 
+            if(result && result.status === 'success') { 
+                AppState.allAdminData = result.data; 
+                populateLevelDropdown(); 
+                populateSubstituteTeacherDropdown(); 
+                setupTeacherSearch(); 
+                setupPasswordRecovery(); 
+                setupReportGeneration(); 
+                displaySavedMessages(AppState.allAdminData.savedMessages || []); 
+                if (AppState.allAdminData.specialMessages) {
+                    const key = DOMElements.messageManagement.keySelect.value;
+                    DOMElements.messageManagement.textarea.value = AppState.allAdminData.specialMessages[key] || '';
+                }
+            } 
+            const today = new Date().toISOString().split('T')[0]; 
+            DOMElements.monitoringDatePicker.value = today; 
+            await fetchMonitoringData(today); 
+            
+            const storedReports = localStorage.getItem('adminSavedReports');
+            if (storedReports) {
+                AppState.savedReports = JSON.parse(storedReports);
+                updateBatchSubmitUI();
+            }
+        }
+        
+        DOMElements.tabButtons.forEach(button => { button.addEventListener('click', () => { DOMElements.tabButtons.forEach(btn => btn.classList.remove('active')); button.classList.add('active'); DOMElements.tabContents.forEach(content => content.classList.remove('active')); document.getElementById(button.dataset.tab).classList.add('active'); }); });
+        
+        // --- Management Tab Logic ---
+        function resetSelection() { AppState.selectedTeacher = null; DOMElements.selectedTeacherDisplays.forEach(div => { div.textContent = ''; div.classList.add('hidden'); }); DOMElements.forms.teacherEdit.reset(); DOMElements.forms.monitor.reset(); DOMElements.passwordRecovery.recoveredPassword.textContent = '[শিক্ষক নির্বাচন করুন]'; DOMElements.passwordRecovery.smsMessage.value = ''; DOMElements.teacherSearch.index.value = ''; DOMElements.teacherSearch.level.value = ''; DOMElements.teacherSearch.name.innerHTML = '<option value="">-- নাম নির্বাচন করুন --</option>'; DOMElements.teacherSearch.name.disabled = true; }
+        
+        function setupFormSubmissions() { 
+            DOMElements.forms.leave.addEventListener('submit', async (e) => { e.preventDefault(); if (!AppState.selectedTeacher) { showToast('অনুগ্রহ করে প্রথমে একজন শিক্ষক নির্বাচন করুন।', 'error'); return; } const formData = new FormData(e.target); const selectedSubstitutes = Array.from(DOMElements.substituteTeacherSelect.selectedOptions).map(opt => opt.value).join(', '); formData.append('action', 'addLeaveInfo'); formData.append('teacherIndex', AppState.selectedTeacher.IndexNo); formData.append('teacherFN', AppState.selectedTeacher.TeacherFN); formData.append('designation', AppState.selectedTeacher.Designation); formData.set('comment', selectedSubstitutes); const result = await handleApiCall(formData, e.target.querySelector('button')); if(result) { showToast(result.message); e.target.reset(); resetSelection(); } }); 
+            DOMElements.messageManagement.updateBtn.addEventListener('click', async (e) => { const formData = new FormData(DOMElements.forms.message); formData.append('action', 'updateSystemMessage'); const result = await handleApiCall(formData, e.target); if(result) showToast(result.message); }); 
+            DOMElements.messageManagement.addBtn.addEventListener('click', async (e) => { const textarea = DOMElements.messageManagement.textarea; const newMessageText = textarea.value.trim(); if (!newMessageText) { showToast('অনুগ্রহ করে প্রথমে একটি বার্তা লিখুন।', 'error'); return; } const formData = new FormData(); formData.append('action', 'addNewSavedMessage'); formData.append('newMessage', newMessageText); const result = await handleApiCall(formData, e.target); if (result) { showToast(result.message); if (!AppState.allAdminData.savedMessages) AppState.allAdminData.savedMessages = []; const messages = AppState.allAdminData.savedMessages; messages.push({ ID: result.newId, Message: newMessageText }); displaySavedMessages(messages); textarea.value = ''; } }); 
+            DOMElements.forms.monitor.addEventListener('submit', async (e) => { e.preventDefault(); if (!AppState.selectedTeacher) { showToast('অনুগ্রহ করে প্রথমে একজন শিক্ষক নির্বাচন করুন।', 'error'); return; } const formData = new FormData(e.target); const selectedDays = Array.from(document.querySelectorAll('input[name="monitorDay"]:checked')).map(cb => cb.value).join(', '); formData.append('action', 'updateMonitorDuty'); formData.append('teacherIndex', AppState.selectedTeacher.IndexNo); formData.append('teacherName', AppState.selectedTeacher.TeacherFN); formData.set('monitorDay', selectedDays); const result = await handleApiCall(formData, e.target.querySelector('button')); if(result) { showToast(result.message); resetSelection(); } }); 
+            DOMElements.forms.teacherEdit.addEventListener('submit', async(e) => { e.preventDefault(); if (!AppState.selectedTeacher) { showToast('অনুগ্রহ করে প্রথমে একজন শিক্ষক নির্বাচন করুন।', 'error'); return; } const formData = new FormData(e.target); const mobileNoInput = e.target.querySelector('[name="MobileNo"]'); if(mobileNoInput) { formData.set('MobileNo', mobileNoInput.value); } formData.append('action', 'updateTeacherInfo'); const result = await handleApiCall(formData, e.target.querySelector('button')); if(result) { showToast(result.message); resetSelection(); } }); 
+        }
+        
+        setupFormSubmissions();
+        function populateLevelDropdown(){ const levelSelect = DOMElements.teacherSearch.level; const grades = [...new Set(AppState.allAdminData.allTeachers.map(t => t.Grade))].filter(Boolean); levelSelect.innerHTML = '<option value="">-- স্তর নির্বাচন করুন --</option>'; grades.forEach(grade => { const trimmedGrade = grade.trim(); levelSelect.innerHTML += `<option value="${trimmedGrade}">${trimmedGrade}</option>`; }); }
+        function populateSubstituteTeacherDropdown() { const select = DOMElements.substituteTeacherSelect; select.innerHTML = ''; if (AppState.allAdminData.allTeachers) { AppState.allAdminData.allTeachers.forEach(teacher => { const option = new Option(`${teacher.TeacherFN} (${teacher.Designation})`, teacher.TeacherFN); select.appendChild(option); }); } }
+        
+        function setupTeacherSearch() {
+            const { level, name, index } = DOMElements.teacherSearch;
+            level.addEventListener('change', () => {
+                const selectedLevel = level.value;
+                name.innerHTML = '<option value="">-- নাম নির্বাচন করুন --</option>';
+                name.disabled = true;
+                if (selectedLevel && AppState.allAdminData.allTeachers) {
+                    const teachersInLevel = AppState.allAdminData.allTeachers.filter(t => t.Grade && t.Grade.trim() === selectedLevel);
+                    if(teachersInLevel.length > 0) {
+                        teachersInLevel.forEach(teacher => name.add(new Option(`${teacher.TeacherFN} (${teacher.IndexNo})`, teacher.IndexNo)));
+                        name.disabled = false;
+                    }
+                }
+            });
+            index.addEventListener('input', () => {
+                clearTimeout(AppState.searchTimer);
+                const indexValue = index.value.trim();
+                if (indexValue) {
+                    AppState.searchTimer = setTimeout(() => { handleTeacherSelection(indexValue); }, 500);
+                }
+            });
+            name.addEventListener('change', () => { if(name.value) handleTeacherSelection(name.value) });
+        }
+
+        async function handleTeacherSelection(index) {
+            const formData = new FormData();
+            formData.append('action', 'getTeacherForAdmin');
+            formData.append('index', index);
+            const result = await handleApiCall(formData);
+
+            if (result && result.teacher) {
+                const teacher = result.teacher;
+                AppState.selectedTeacher = teacher;
+                
+                const { index: indexInput, level: levelSelect, name: nameSelect } = DOMElements.teacherSearch;
+                
+                indexInput.value = teacher.IndexNo;
+                
+                if (teacher.Grade) {
+                    levelSelect.value = teacher.Grade;
+                    nameSelect.innerHTML = '<option value="">-- নাম নির্বাচন করুন --</option>';
+                    const teachersInLevel = AppState.allAdminData.allTeachers.filter(t => t.Grade && t.Grade.trim() === teacher.Grade.trim());
+                    if (teachersInLevel.length > 0) {
+                        teachersInLevel.forEach(t => nameSelect.add(new Option(`${t.TeacherFN} (${t.IndexNo})`, t.IndexNo)));
+                        nameSelect.disabled = false;
+                    }
+                }
+                nameSelect.value = teacher.IndexNo;
+
+                DOMElements.selectedTeacherDisplays.forEach(div => {
+                    div.textContent = `নির্বাচিত: ${teacher.TeacherFN} (${teacher.IndexNo})`;
+                    div.classList.remove('hidden');
+                });
+
+                DOMElements.passwordRecovery.recoveredPassword.textContent = result.password || 'N/A';
+                DOMElements.passwordRecovery.smsMessage.value = `শ্রদ্ধেয় ${teacher.TeacherFN},\nক্লাস মনিটর অ্যাপের জন্য আপনার পাসওয়ার্ডটি হলো ${result.password}.\nঅনুগ্রহ করে এটিকে গোপনীয়ভাবে সংরক্ষণ করুন। অ্যাপ ব্যবহারের জন্য আপনাকে ধন্যবাদ।`;
+
+                const editForm = DOMElements.forms.teacherEdit;
+                editForm.querySelector('[name="Index"]').value = teacher.IndexNo || '';
+                editForm.querySelector('[name="TeacherFN"]').value = teacher.TeacherFN || '';
+                editForm.querySelector('[name="TcrAddress"]').value = teacher.TcrAddress || '';
+                editForm.querySelector('[name="TeacherSub"]').value = teacher.TeacherSub || '';
+                editForm.querySelector('[name="MobileNo"]').value = teacher.MobileNo || '';
+
+                const monitorForm = DOMElements.forms.monitor;
+                const duties = teacher.MonitorDuty || {};
+                monitorForm.querySelector('[name="monComment"]').value = duties.Role || '';
+                monitorForm.querySelector('[name="status"]').value = duties.Status || 'On';
+                document.querySelectorAll('input[name="monitorDay"]').forEach(cb => {
+                    cb.checked = (duties.MonitorDay || '').includes(cb.value);
+                });
+
+            } else {
+                showToast('এই ইনডেক্সে কোনো শিক্ষক পাওয়া যায়নি।', 'error');
+                resetSelection();
+            }
+        }
+        
+        DOMElements.messageManagement.keySelect.addEventListener('change', (e) => {
+            const key = e.target.value;
+            if (AppState.allAdminData.specialMessages) {
+                DOMElements.messageManagement.textarea.value = AppState.allAdminData.specialMessages[key] || '';
+            }
+        });
+
+        function setupPasswordRecovery() { DOMElements.passwordRecovery.copyBtn.addEventListener('click', () => { const messageArea = DOMElements.passwordRecovery.smsMessage; if(!messageArea.value) { showToast("কপি করার জন্য কোন বার্তা নেই।", "error"); return; } messageArea.select(); document.execCommand('copy'); showToast('মেসেজ সফলভাবে কপি করা হয়েছে!'); }); }
+        
+        // --- Reports Tab Logic ---
+        function setupReportGeneration() {
+            const reports = DOMElements.reportGeneration;
+
+            function updateTimeframeOptions() {
+                const mainType = reports.mainTypeSelect.value;
+                const timeframeSelect = reports.timeframeSelect;
+                if (mainType === 'student-attendance') {
+                    timeframeSelect.innerHTML = `<option value="daily">দৈনিক</option><option value="weekly">সাপ্তাহিক গড়</option><option value="monthly">মাসিক গড়</option>`;
+                } else {
+                    timeframeSelect.innerHTML = `<option value="daily">দৈনিক</option><option value="weekly">সাপ্তাহিক</option><option value="monthly">মাসিক</option>`;
+                }
+            }
+
+            function updateReportUI() {
+                const mainType = reports.mainTypeSelect.value;
+                const teacherSubtype = reports.teacherSubtypeSelect.value;
+                const isLeaveReport = mainType === 'teacher-reports' && teacherSubtype === 'leave';
+
+                reports.teacherSection.classList.toggle('hidden', mainType !== 'teacher-reports');
+                DOMElements.leaveReport.container.classList.toggle('hidden', !isLeaveReport);
+                reports.timeframeContainer.classList.toggle('hidden', isLeaveReport);
+                
+                reports.previewDiv.innerHTML = ''; 
+                DOMElements.leaveReport.cardContainer.innerHTML = '';
+                DOMElements.leaveReport.downloadContainer.classList.add('hidden');
+
+                if (!isLeaveReport) {
+                    const needsTimeframe = mainType === 'student-attendance' || (mainType === 'teacher-reports' && teacherSubtype === 'class');
+                    reports.timeframeContainer.classList.toggle('hidden', !needsTimeframe);
+                    updateTimeframeOptions();
+                    updateDatePickers();
+                }
+            }
+
+            const months = ["জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"];
+            months.forEach((month, index) => { reports.monthSelect.add(new Option(month, index + 1)); });
+            const currentYear = new Date().getFullYear();
+            for (let i = currentYear; i >= currentYear - 5; i--) { reports.yearSelect.add(new Option(i, i)); }
+            reports.monthSelect.value = new Date().getMonth() + 1;
+            reports.yearSelect.value = currentYear;
+            reports.singleDatePicker.valueAsDate = new Date();
+
+            function updateDatePickers() {
+                const selected = reports.timeframeSelect.value;
+                reports.dailyWeeklyPicker.classList.toggle('hidden', selected !== 'daily' && selected !== 'weekly');
+                reports.monthlyPicker.classList.toggle('hidden', selected !== 'monthly');
+            }
+
+            reports.mainTypeSelect.addEventListener('change', updateReportUI);
+            reports.teacherSubtypeSelect.addEventListener('change', updateReportUI);
+            reports.timeframeSelect.addEventListener('change', updateDatePickers);
+
+            reports.generateBtn.addEventListener('click', async (e) => {
+                const reportType = reports.mainTypeSelect.value;
+                const reportSubtype = reports.teacherSubtypeSelect.value;
+                const formData = new FormData();
+                formData.append('action', 'generateReport');
+                
+                if (reportType === 'student-attendance' || (reportType === 'teacher-reports' && reportSubtype === 'class')) {
+                    const timeframe = reports.timeframeSelect.value;
+                    formData.append('timeframe', timeframe);
+                    if (timeframe === 'daily' || timeframe === 'weekly') {
+                        formData.append('date', reports.singleDatePicker.value);
+                    } else if (timeframe === 'monthly') {
+                        formData.append('month', reports.monthSelect.value);
+                        formData.append('year', reports.yearSelect.value);
+                    }
+                }
+                formData.append('reportSubtype', reportType === 'student-attendance' ? 'studentAttendance' : reportSubtype);
+                const result = await handleApiCall(formData, e.target);
+                if (result) {
+                    displayReport(result);
+                    if (result.data && result.data.length > 0) {
+                        reports.mainControls.classList.add('hidden');
+                        DOMElements.forms.report.classList.add('hidden');
+                        reports.downloadContainer.classList.remove('hidden');
+                        reports.closeBtn.classList.remove('hidden');
+                    }
+                } else {
+                    reports.previewDiv.innerHTML = '<p class="text-center text-gray-500">কোনো ডেটা পাওয়া যায়নি।</p>';
+                }
+            });
+
+            reports.closeBtn.addEventListener('click', () => {
+                reports.previewDiv.innerHTML = '';
+                reports.closeBtn.classList.add('hidden');
+                reports.downloadContainer.classList.add('hidden');
+                reports.mainControls.classList.remove('hidden');
+                DOMElements.forms.report.classList.remove('hidden');
+            });
+
+            reports.downloadHtmlBtn.addEventListener('click', (e) => { e.preventDefault(); downloadReport('html'); });
+            reports.downloadDocBtn.addEventListener('click', (e) => { e.preventDefault(); downloadReport('doc'); });
+            
+            function populateLeaveCardDropdowns() {
+                const levelSelect = DOMElements.leaveReport.levelSelect;
+                const teacherSelect = DOMElements.leaveReport.teacherSelect;
+                
+                const grades = [...new Set(AppState.allAdminData.allTeachers.map(t => t.Grade))].filter(Boolean);
+                levelSelect.innerHTML = '<option value="">-- স্তর নির্বাচন করুন --</option>';
+                grades.forEach(grade => {
+                    const trimmedGrade = grade.trim();
+                    levelSelect.innerHTML += `<option value="${trimmedGrade}">${trimmedGrade}</option>`;
+                });
+
+                levelSelect.addEventListener('change', () => {
+                    const selectedLevel = levelSelect.value;
+                    teacherSelect.innerHTML = '<option value="">-- শিক্ষক নির্বাচন করুন --</option>';
+                    teacherSelect.disabled = true;
+                    if (selectedLevel && AppState.allAdminData.allTeachers) {
+                        const teachersInLevel = AppState.allAdminData.allTeachers.filter(t => t.Grade && t.Grade.trim() === selectedLevel);
+                        if(teachersInLevel.length > 0) {
+                            teachersInLevel.forEach(teacher => {
+                                teacherSelect.add(new Option(`${teacher.TeacherFN} (${teacher.IndexNo})`, teacher.IndexNo));
+                            });
+                            teacherSelect.disabled = false;
+                        }
+                    }
+                });
+            }
+
+            async function showIndividualLeaveCard() {
+                const teacherIndex = DOMElements.leaveReport.teacherSelect.value;
+                if (!teacherIndex) {
+                    showToast('অনুগ্রহ করে একজন শিক্ষক নির্বাচন করুন।', 'error');
+                    return;
+                }
+                const btn = DOMElements.leaveReport.showCardBtn;
+                const formData = new FormData();
+                formData.append('action', 'getIndividualLeaveCard');
+                formData.append('index', teacherIndex);
+
+                const result = await handleApiCall(formData, btn);
+
+                if (result && result.status === 'success' && result.data) {
+                    const { TeacherFN, IndexNo, monthlyLeaves, yearlyLeaves, leaveDetails } = result.data;
+                    const cardContainer = DOMElements.leaveReport.cardContainer;
+                    const today = new Date().toLocaleDateString('bn-BD');
+
+                    let detailsHtml = '';
+                    if (leaveDetails && leaveDetails.length > 0) {
+                        detailsHtml += '<h6 class="text-md font-bold text-gray-800 mt-3">বিস্তারিত</h6>';
+                        leaveDetails.forEach(leave => {
+                            const startDate = new Date(leave.LeaveStart);
+                            const endDate = new Date(leave.LeaveEnd);
+                            const duration = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+                            const startDateFormatted = startDate.toLocaleDateString('bn-BD');
+                            detailsHtml += `<p class="text-sm text-gray-600">${startDateFormatted} থেকে, ${convertEnglishToBanglaNumerals(duration)} দিন, ${leave.LeaveType}</p>`;
+                        });
+                    }
+
+                    cardContainer.innerHTML = `
+                        <div id="leave-card-to-download" class="p-4 bg-teal-50 border border-teal-200 rounded-lg shadow-md text-center">
+                            <p class="text-xs text-gray-500 mb-2">রিপোর্টের তারিখ: ${today}</p>
+                            <h5 class="text-lg font-bold text-teal-800">${TeacherFN} (${IndexNo})</h5>
+                            <div class="mt-2 pt-2 border-t">
+                                <p class="text-md text-gray-700"><strong>চলতি মাসে ভোগকৃত ছুটি:</strong> ${convertEnglishToBanglaNumerals(monthlyLeaves)} দিন</p>
+                                <p class="text-md text-gray-700"><strong>চলতি বছরে ভোগকৃত ছুটি:</strong> ${convertEnglishToBanglaNumerals(yearlyLeaves)} দিন</p>
+                                ${detailsHtml}
+                            </div>
+                        </div>`;
+                    DOMElements.leaveReport.downloadContainer.classList.remove('hidden');
+                } else {
+                    showToast(result ? result.message : 'কার্ডের তথ্য আনা সম্ভব হয়নি।', 'error');
+                    DOMElements.leaveReport.cardContainer.innerHTML = '';
+                    DOMElements.leaveReport.downloadContainer.classList.add('hidden');
+                }
+            }
+
+            populateLeaveCardDropdowns();
+            DOMElements.leaveReport.showCardBtn.addEventListener('click', showIndividualLeaveCard);
+            
+            updateReportUI();
+            updateDatePickers();
+        }
+
+        function getReportBlob(format) { const reportContent = DOMElements.reportGeneration.previewDiv.innerHTML; if (!reportContent) { showToast('ডাউনলোড করার জন্য কোনো রিপোর্ট নেই।', 'error'); return null; } const htmlTemplate = `<!DOCTYPE html><html lang="bn"><head><meta charset="UTF-8"><title>রিপোর্ট</title><link href="https://fonts.googleapis.com/css2?family=Tiro+Bangla&display=swap" rel="stylesheet"><style>body{font-family:'Tiro Bangla',serif;margin:20px;line-height:1.6;font-size:1.1rem}h4,h3{font-size:1.5rem;font-weight:bold}p{font-size:1.1rem}table{width:100%;border-collapse:collapse;margin-top:20px;font-size:1rem}th,td{border:1px solid #ddd;text-align:left;padding:8px;vertical-align:top}th{background-color:#f2f2f2}</style></head><body>${reportContent}</body></html>`; const mimeType = format === 'html' ? 'text/html' : 'application/vnd.ms-word'; return new Blob([htmlTemplate], { type: mimeType }); }
+        
+        function downloadReport(format) { const blob = getReportBlob(format); if(!blob) return; const fileName = format === 'html' ? 'report.html' : 'report.doc'; const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = fileName; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); }
+        
+        function displayReport(result) {
+            let { data, title, subtitle } = result;
+            const previewDiv = DOMElements.reportGeneration.previewDiv;
+            previewDiv.innerHTML = ''; 
+
+            const headerHTML = `
+                <div class="text-center mb-4">
+                    <h4 class="text-xl font-bold">শিবগঞ্জ ফাযিল ডিগ্রী মাদ্রাসা</h4>
+                    <p class="text-lg">${title}</p>
+                    <p class="text-md text-gray-600">${convertEnglishToBanglaNumerals(subtitle)}</p>
+                </div>
+            `;
+            
+            if (!data || data.length === 0) {
+                previewDiv.innerHTML = `${headerHTML}<p class="text-center text-gray-500">এই সময়সীমার জন্য কোনো ডেটা পাওয়া যায়নি।</p>`;
+                return;
+            }
+
+            if (title.includes('শিক্ষার্থী হাজিরা')) {
+                const classSortOrder = ['১ম শ্রেণি', '২য় শ্রেণি', '৩য় শ্রেণি', '৪র্থ শ্রেণি', '৫ম শ্রেণি', '৬ষ্ঠ শ্রেণি', '৭ম শ্রেণি', '৮ম শ্রেণি', '৯ম শ্রেণি', '১০ম শ্রেণি', 'আলিম ১ম বর্ষ', 'আলিম ২য় বর্ষ', 'ফাযিল ১ম বর্ষ', 'ফাযিল ২য় বর্ষ', 'ফাযিল ৩য় বর্ষ'];
+                const classNameKey = Object.keys(data[0])[0];
+                data.sort((a, b) => { 
+                    const classA = a[classNameKey] || '';
+                    const classB = b[classNameKey] || '';
+                    const indexA = classSortOrder.indexOf(classA); 
+                    const indexB = classSortOrder.indexOf(classB); 
+                    return indexA - indexB; 
+                });
+            }
+
+            const table = document.createElement('table');
+            table.className = 'min-w-full divide-y divide-gray-200';
+            const thead = document.createElement('thead');
+            thead.className = 'bg-gray-50';
+            const tbody = document.createElement('tbody');
+            tbody.className = 'bg-white divide-y divide-gray-200';
+
+            let headers = Object.keys(data[0]);
+            
+            const headerRow = document.createElement('tr');
+            headers.forEach(headerKey => {
+                const th = document.createElement('th');
+                th.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
+                th.textContent = headerKey;
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+
+            data.forEach(rowData => {
+                const row = document.createElement('tr');
+                if (rowData['শ্রেণি'] === 'মোট' || (rowData['তারিখ'] && (rowData['তারিখ'].includes('গড়')))) {
+                    row.className = 'bg-teal-100 font-bold text-gray-800';
+                }
+                headers.forEach(header => {
+const td = document.createElement('td');
+td.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-700';
+let cellValue = rowData[header];
+
+if (header === 'তারিখ') {
+    td.textContent = formatBengaliDate(cellValue);
+} else if (header === 'IndexNo' || header === 'ইনডেক্স' || header === 'মনিঃ ইনঃ' || header === 'শিক্ষকের ইনডেক্স' || header === 'মনিঃ ইনডেক্স') {
+    td.textContent = cellValue; // ইনডেক্স নম্বরকে বাংলা করবেন না
+} else {
+    td.textContent = convertEnglishToBanglaNumerals(cellValue);
+}
+row.appendChild(td);
+                });
+                tbody.appendChild(row);
+            });
+
+            table.appendChild(thead);
+            table.appendChild(tbody);
+            previewDiv.innerHTML = headerHTML;
+            previewDiv.appendChild(table);
+        }
+        
+        function displaySavedMessages(messages) { const container = DOMElements.messageManagement.savedContainer; container.innerHTML = ''; if (!messages || messages.length === 0) { container.innerHTML = '<p class="text-center text-gray-400">কোনো সংরক্ষিত বার্তা নেই।</p>'; return; } messages.forEach(msg => { const messageDiv = document.createElement('div'); messageDiv.className = 'flex items-center justify-between p-2 bg-white border rounded-md shadow-sm'; const textSpan = document.createElement('span'); textSpan.className = 'text-gray-700 flex-grow mr-2 text-sm'; textSpan.textContent = msg.Message; const btnGroup = document.createElement('div'); btnGroup.className = 'flex-shrink-0'; const useBtn = document.createElement('button'); useBtn.textContent = 'ব্যবহার'; useBtn.type = 'button'; useBtn.className = 'text-xs bg-green-100 text-green-700 px-2 py-1 rounded mr-1 hover:bg-green-200'; useBtn.onclick = () => { DOMElements.messageManagement.textarea.value = msg.Message; }; const deleteBtn = document.createElement('button'); deleteBtn.textContent = 'মুছুন'; deleteBtn.type = 'button'; deleteBtn.className = 'text-xs bg-red-100 text-red-700 px-2 py-1 rounded hover:bg-red-200'; deleteBtn.onclick = async () => { const formData = new FormData(); formData.append('action', 'deleteMessage'); formData.append('messageId', msg.ID); const result = await handleApiCall(formData, null); if (result) { showToast(result.message); const currentMessages = AppState.allAdminData.savedMessages; const index = currentMessages.findIndex(m => m.ID === msg.ID); if (index > -1) currentMessages.splice(index, 1); displaySavedMessages(currentMessages); } }; btnGroup.appendChild(useBtn); btnGroup.appendChild(deleteBtn); messageDiv.appendChild(textSpan); messageDiv.appendChild(btnGroup); container.appendChild(messageDiv); }); }
+        
+        // --- Monitoring Tab Logic ---
+        DOMElements.monitoringDatePicker.addEventListener('change', (e) => fetchMonitoringData(e.target.value));
+
+        async function fetchMonitoringData(dateStr) {
+            if (!dateStr) return;
+            DOMElements.dutyRosterContainer.innerHTML = '<p class="text-center text-gray-500">লোড হচ্ছে...</p>';
+            DOMElements.monitorTeamContainer.innerHTML = '<p class="text-center text-gray-500">লোড হচ্ছে...</p>';
+
+            try {
+                // Single API call to get all necessary data for the monitoring tab
+                const formData = new FormData();
+                formData.append('action', 'getMonitoringDataForDate');
+                formData.append('date', dateStr);
+                const result = await handleApiCall(formData, null);
+
+                if (result && result.status === 'success' && result.data) {
+                    AppState.monitoringData = result.data;
+                    renderDutyRoster(result.data.dutyRoster, dateStr);
+                    renderMonitorTeam(result.data.monitoringTeam);
+                } else {
+                    const errorMsg = result ? result.message : 'মনিটরিং ডেটা লোড করা যায়নি।';
+                    throw new Error(errorMsg);
+                }
+            } catch (error) {
+                showToast(error.message, 'error');
+                DOMElements.dutyRosterContainer.innerHTML = `<p class="text-center text-red-500">${error.message}</p>`;
+                DOMElements.monitorTeamContainer.innerHTML = `<p class="text-center text-red-500">${error.message}</p>`;
+            }
+        }
+
+        function renderDutyRoster(roster, dateStr) { const container = DOMElements.dutyRosterContainer; if (!roster || Object.keys(roster).length === 0) { container.innerHTML = '<p class="text-center text-gray-500">এই তারিখে কোনো ডিউটি তালিকা তৈরি হয়নি।</p>'; return; } const tableRows = Object.entries(roster).map(([period, monitor]) => `<tr class="hover:bg-gray-50"><td class="border py-2 font-semibold text-center w-1">${period}</td><td class="border px-4 py-2 text-center"><span class="cursor-pointer text-blue-600 hover:underline reassign-duty-btn" data-date="${dateStr}" data-period="${period}" data-name="${monitor.name}" data-index="${monitor.index}">${monitor.name} (${monitor.index})</span></td></tr>`).join(''); container.innerHTML = `<p class="text-center text-xs text-red-600 mb-2">ডিউটি পরিবর্তন করতে নামের উপর ক্লিক করুন।</p><table class="w-full text-sm text-left border-collapse border"><thead class="bg-gray-200"><tr><th class="border py-2 text-center w-1">পিরিয়ড</th><th class="border px-4 py-2 text-center">দায়িত্বপ্রাপ্ত মনিটর</th></tr></thead><tbody>${tableRows}</tbody></table>`; }
+        
+        function renderMonitorTeam(team) {
+            const container = DOMElements.monitorTeamContainer;
+            const dutyRoster = AppState.monitoringData.dutyRoster || {};
+            const uniqueMonitorIndices = [...new Set(Object.values(dutyRoster).map(monitor => monitor.index))];
+
+            if (uniqueMonitorIndices.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-500">এই তারিখে কোনো মনিটরের দায়িত্ব নির্ধারিত নেই।</p>';
+                return;
+            }
+
+            const allTeachers = AppState.monitoringData.allTeachers || [];
+            const monitorsToDisplay = uniqueMonitorIndices.map(index => {
+                const teacherInfo = allTeachers.find(t => t.IndexNo == index);
+                const regularMonitorInfo = team.find(m => m.TeacherIndex == index);
+                return {
+                    IndexNo: index,
+                    MonitorName: teacherInfo ? teacherInfo.TeacherFN : `ইনডেক্স ${index}`,
+                    MonComment: regularMonitorInfo ? regularMonitorInfo.Role : 'সাময়িক দায়িত্ব',
+                };
+            });
+
+            const routine = AppState.monitoringData.routine || [];
+            container.innerHTML = monitorsToDisplay.map(monitor => {
+                const role = monitor.MonComment || 'টিম সদস্য';
+                const roleColorClass = role === 'টিম প্রধান' ? 'text-purple-700 font-bold' : (role === 'সাময়িক দায়িত্ব' ? 'text-orange-700 font-bold' : 'text-gray-700');
+                const busyPeriods = new Set(routine.filter(r => r.TeacherIndex == monitor.IndexNo).map(r => r.Period));
+                const offPeriods = TEACHING_PERIODS.filter(p => !busyPeriods.has(p));
+                const offPeriodsText = offPeriods.length > 0 ? `অফ পিরিয়ড: ${offPeriods.join(', ')}` : 'কোনো অফ পিরিয়ড নেই';
+                return `
+                    <div class="p-4 rounded-xl shadow-md text-center space-y-2 cursor-pointer bg-teal-50 hover:bg-teal-100 open-monitor-form-btn" data-index="${monitor.IndexNo}">
+                        <p class="text-xl font-bold text-teal-800">${monitor.MonitorName} (${monitor.IndexNo})</p>
+                        <p class="text-md ${roleColorClass}">${role}</p>
+                        <p class="text-sm text-gray-600 pt-2 border-t border-teal-200 mt-2">${offPeriodsText}</p>
+                    </div>`;
+            }).join('');
+        }
+        
+        // --- MONITORING ACTIONS ---
+        async function openAdminMonitorForm(monitorIndex) { const form = DOMElements.monitorFormModal.querySelector('form'); form.reset(); const dateInput = DOMElements.monitorFormModal.querySelector('#monitor-form-date'); dateInput.value = DOMElements.monitoringDatePicker.value; DOMElements.monitorFormModal.querySelector('#monitor-form-index').value = monitorIndex; const periodSelect = DOMElements.monitorFormModal.querySelector('#monitor-form-period-select'); periodSelect.innerHTML = TEACHING_PERIODS.map(p => `<option value="${p}">${p}</option>`).join(''); const levelDropdown = DOMElements.monitorFormModal.querySelector('#monitor-form-level'); levelDropdown.innerHTML = '<option value="" disabled selected>-- স্তর নির্বাচন করুন --</option>'; if(AppState.monitoringData.classStructure) { Object.keys(AppState.monitoringData.classStructure).forEach(level => { levelDropdown.innerHTML += `<option value="${level}">${level}</option>`; }); } await updateMonitorFormOnDateChange(dateInput.value); DOMElements.monitorFormModal.classList.remove('hidden'); }
+        async function updateMonitorFormOnDateChange(dateStr) { const formData = new FormData(); formData.append('action', 'getRoutineAndAttendanceForDate'); formData.append('date', dateStr); const result = await handleApiCall(formData); if (result && result.data) { AppState.formSpecificData = result.data; populateAdminMonitorClassDropdown(); } }
+        function populateAdminMonitorClassDropdown() { const form = DOMElements.monitorFormModal; const level = form.querySelector('#monitor-form-level').value; const period = form.querySelector('#monitor-form-period-select').value; const classSelect = form.querySelector('#monitor-form-class'); classSelect.innerHTML = '<option value="" disabled selected>-- শ্রেণি --</option>'; const routine = AppState.monitoringData.routine || []; const classesForLevel = AppState.monitoringData.classStructure[level] || [];
+        const classesInPeriod = [...new Set(routine.filter(r => r.Period === period && r.Class && classesForLevel.includes(r.Class)).map(r => r.Class))]; if (classesInPeriod.length > 0) { classesInPeriod.forEach(className => { classSelect.innerHTML += `<option value="${className}">${className}</option>`; }); classSelect.disabled = false; } else { classSelect.disabled = true; } updateTeacherForAdminMonitorForm(); }
+function updateTeacherForAdminMonitorForm() {
+            const form = DOMElements.monitorFormModal;
+            const selectedClass = form.querySelector('#monitor-form-class').value;
+            const period = form.querySelector('#monitor-form-period-select').value;
+            
+            const teacherInput = form.querySelector('#monitor-form-teacher');
+            const teacherSelect = form.querySelector('#monitor-form-teacher-select');
+            const attendanceInput = form.querySelector('#monitor-form-attendance');
+
+            // Use the correct data source which is now pre-loaded
+            const routine = AppState.formSpecificData.routine || [];
+            const attendance = AppState.formSpecificData.dateAttendance || [];
+
+            const classInfoArray = routine.filter(c => c.Class === selectedClass && c.Period === period);
+
+            teacherSelect.classList.add('hidden');
+            teacherSelect.innerHTML = '';
+
+            if (classInfoArray.length > 1) {
+                teacherSelect.classList.remove('hidden');
+                teacherSelect.innerHTML = '<option value="">-- একাধিক শিক্ষক, বাছাই করুন --</option>';
+                classInfoArray.forEach(classInfo => {
+                    const displayText = classInfo.TeacherSub ? `${classInfo.TeacherFN} (${classInfo.TeacherSub})` : classInfo.TeacherFN;
+                    const option = new Option(displayText, classInfo.TeacherFN);
+                    teacherSelect.add(option);
+                });
+                teacherInput.value = classInfoArray[0].TeacherFN;
+                teacherSelect.onchange = () => {
+                    if (teacherSelect.value) {
+                        teacherInput.value = teacherSelect.value;
+                    }
+                };
+            } else if (classInfoArray.length === 1) {
+                teacherInput.value = classInfoArray[0].TeacherFN;
+                teacherSelect.onchange = null;
+            } else {
+                teacherInput.value = 'শিক্ষক নেই';
+                teacherSelect.onchange = null;
+            }
+
+            // Find and pre-fill attendance
+            const attendanceInfo = attendance.find(a => a.Class === selectedClass && a.Period === period);
+            attendanceInput.value = attendanceInfo ? attendanceInfo.Attendance : '';
+        }
+        
+        function promptReassignment(date, period, originalName, originalIndex) { const modal = DOMElements.reassignDutyModal; modal.querySelector('#reassign-date').value = date; modal.querySelector('#reassign-period').value = period; modal.querySelector('#reassign-original-monitor-index').value = originalIndex; modal.querySelector('#reassign-period-text').textContent = period; modal.querySelector('#reassign-original-monitor-text').textContent = `${originalName} (${originalIndex})`; const onLeaveIndices = new Set((AppState.monitoringData.onLeave || []).map(l => l.Index)); const availableMonitors = AppState.monitoringData.allTeachers.filter(t => !onLeaveIndices.has(t.IndexNo) && t.IndexNo != originalIndex); const selectEl = modal.querySelector('#reassign-new-monitor-select'); selectEl.innerHTML = '<option value="" disabled selected>-- নতুন মনিটর --</option>'; availableMonitors.forEach(m => { selectEl.innerHTML += `<option value="${m.IndexNo}">${m.TeacherFN} (${m.IndexNo})</option>`; }); modal.classList.remove('hidden'); }
+        async function handleReassignSubmit(e) { e.preventDefault(); const form = e.target; const btn = form.querySelector('button[type="submit"]'); const formData = new FormData(); formData.append('action', 'adminReassignDuty'); formData.append('date', form.querySelector('#reassign-date').value); formData.append('period', form.querySelector('#reassign-period').value); formData.append('originalMonitorIndex', form.querySelector('#reassign-original-monitor-index').value); formData.append('newMonitorIndex', form.querySelector('#reassign-new-monitor-select').value); if (!formData.get('newMonitorIndex')) { showToast('অনুগ্রহ করে একজন নতুন মনিটর নির্বাচন করুন।', 'error'); return; } const result = await handleApiCall(formData, btn); if(result) { showToast(result.message); DOMElements.reassignDutyModal.classList.add('hidden'); fetchMonitoringData(DOMElements.monitoringDatePicker.value); } }
+        
+        // --- BATCH SUBMIT LOGIC ---
+        function getReportDataFromForm(form) {
+            const index = form.querySelector('#monitor-form-index').value;
+            const date = form.querySelector('#monitor-form-date').value;
+            const period = form.querySelector('#monitor-form-period-select').value;
+            const level = form.querySelector('#monitor-form-level').value;
+            const className = form.querySelector('#monitor-form-class').value;
+            const teacherName = form.querySelector('#monitor-form-teacher').value;
+            const attendance = form.querySelector('#monitor-form-attendance').value;
+
+            const routine = AppState.formSpecificData.routine || [];
+            const teacherInfo = routine.find(r => r.Class === className && r.Period === period && r.TeacherFN === teacherName);
+            const teacherIndex = teacherInfo ? teacherInfo.IndexNo : null;
+
+            const reports = [];
+            if (form.querySelector('#report-ok').checked) reports.push('ঠিক আছে');
+            if (form.querySelector('#report-no-students').checked) reports.push('শিক্ষার্থী নেই');
+            if (form.querySelector('#report-absent').checked) reports.push('শিক্ষক অনুপস্থিত');
+            if (form.querySelector('#report-late').checked) {
+                const minutes = form.querySelector('#report-late-min').value || 0;
+                reports.push(`${minutes} মিনিট পরে প্রবেশ`);
+            }
+            if (form.querySelector('#report-early').checked) {
+                const minutes = form.querySelector('#report-early-min').value || 0;
+                reports.push(`${minutes} মিনিট আগে প্রস্থান`);
+            }
+            if (form.querySelector('#report-extra-info').checked) {
+                const extraInfo = form.querySelector('#report-extra-info-text').value.trim();
+                if (extraInfo) reports.push(extraInfo);
+            }
+            
+            return {
+                MonitorIndex: index,
+                Date: date,
+                Period: period,
+                Level: level,
+                Class: className,
+                ClassTeacher: teacherName,
+                ClassTeacherIndex: teacherIndex,
+                NumberOfAttend: attendance,
+                MonitoReport: reports.join(', ') || 'N/A'
+            };
+        }
+
+        function saveReportForBatch() {
+            const form = DOMElements.monitorFormModal.querySelector('form');
+            const reportData = getReportDataFromForm(form);
+            if (!reportData.Class) {
+                showToast('অনুগ্রহ করে শ্রেণি নির্বাচন করুন।', 'error');
+                return;
+            }
+            AppState.savedReports.push(reportData);
+            localStorage.setItem('adminSavedReports', JSON.stringify(AppState.savedReports));
+            updateBatchSubmitUI();
+            showToast(`রিপোর্ট সফলভাবে সেভ হয়েছে। মোট সেভ: ${AppState.savedReports.length}টি`);
+            const saveBtn = DOMElements.monitorFormModal.querySelector('#save-monitor-report-btn');
+            saveBtn.classList.add('flash-success');
+            setTimeout(() => saveBtn.classList.remove('flash-success'), 500);
+
+            // Reset form fields for the next entry
+            form.querySelector('#monitor-form-level').value = "";
+            form.querySelector('#monitor-form-class').innerHTML = '<option value="" disabled selected>-- শ্রেণি --</option>';
+            form.querySelector('#monitor-form-class').disabled = true;
+            form.querySelector('#monitor-form-teacher').value = '';
+            form.querySelector('#monitor-form-attendance').value = '';
+            form.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+            form.querySelector('#report-extra-info-text').value = '';
+            form.querySelector('#report-late-min').value = ''; 
+            form.querySelector('#report-early-min').value = '';
+            form.querySelector('#monitor-form-period-select').focus();
+        }
+        
+        function updateBatchSubmitUI() {
+            if (AppState.savedReports.length > 0) {
+                DOMElements.savedReportsCount.textContent = convertEnglishToBanglaNumerals(AppState.savedReports.length);
+                DOMElements.batchSubmitContainer.classList.remove('hidden');
+            } else {
+                DOMElements.batchSubmitContainer.classList.add('hidden');
+            }
+        }
+
+        async function submitBatchReports() {
+            if (AppState.savedReports.length === 0) {
+                showToast("জমা দেওয়ার জন্য কোনো সেভ করা রিপোর্ট নেই।", "error");
+                return;
+            }
+            const btn = DOMElements.batchSubmitBtn;
+            const formData = new FormData();
+            formData.append('action', 'batchSubmitReports');
+            formData.append('reports', JSON.stringify(AppState.savedReports));
+            const result = await handleApiCall(formData, btn);
+            if (result && result.status === 'success') {
+                showToast(result.message);
+                AppState.savedReports = [];
+                localStorage.removeItem('adminSavedReports');
+                updateBatchSubmitUI();
+            }
+        }
+
+        // --- EVENT DELEGATION & LISTENERS ---
+        document.body.addEventListener('click', (e) => { 
+            if (e.target.closest('.open-monitor-form-btn')) { 
+                const monitorIndex = e.target.closest('.open-monitor-form-btn').dataset.index; 
+                openAdminMonitorForm(monitorIndex); 
+            } 
+            if (e.target.classList.contains('reassign-duty-btn')) { 
+                const { date, period, name, index } = e.target.dataset; 
+                promptReassignment(date, period, name, index); 
+            } 
+            if (e.target.classList.contains('cancel-modal')) { 
+                e.target.closest('.fixed').classList.add('hidden'); 
+            }
+        });
+        
+        DOMElements.monitorFormModal.querySelector('#save-monitor-report-btn').addEventListener('click', saveReportForBatch);
+        DOMElements.batchSubmitBtn.addEventListener('click', submitBatchReports);
+
+        DOMElements.reassignDutyModal.querySelector('form').addEventListener('submit', handleReassignSubmit);
+        DOMElements.monitorFormModal.querySelector('#monitor-form-date').addEventListener('change', (e) => updateMonitorFormOnDateChange(e.target.value));
+        DOMElements.monitorFormModal.querySelector('#monitor-form-period-select').addEventListener('change', populateAdminMonitorClassDropdown);
+        DOMElements.monitorFormModal.querySelector('#monitor-form-level').addEventListener('change', populateAdminMonitorClassDropdown);
+        DOMElements.monitorFormModal.querySelector('#monitor-form-class').addEventListener('change', updateTeacherForAdminMonitorForm);
+
+        // --- DOWNLOAD FUNCTIONS AND LISTENERS ---
+        function getLeaveCardBlob(format) {
+            const cardContent = document.getElementById('leave-card-to-download');
+            if (!cardContent) {
+                showToast('ডাউনলোড করার জন্য কোনো কার্ড নেই।', 'error');
+                return null;
+            }
+            const htmlTemplate = `<!DOCTYPE html><html lang="bn"><head><meta charset="UTF-8"><title>শিক্ষক ছুটির কার্ড</title><link href="https://fonts.googleapis.com/css2?family=Tiro+Bangla&display=swap" rel="stylesheet"><style>body{font-family:'Tiro Bangla',serif;margin:20px;display:flex;justify-content:center;align-items:center;}.card-wrapper{border:1px solid #ddd;padding:20px;border-radius:8px;width:400px;}</style></head><body><div class="card-wrapper">${cardContent.innerHTML}</div></body></html>`;
+            const mimeType = format === 'html' ? 'text/html' : 'application/vnd.ms-word';
+            return new Blob([htmlTemplate], { type: mimeType });
+        }
+
+        function downloadLeaveCard(format) {
+            const blob = getLeaveCardBlob(format);
+            if (!blob) return;
+            const fileName = format === 'html' ? 'leave_card.html' : 'leave_card.doc';
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        function downloadLeaveCardAsImage() {
+            const cardToCapture = document.getElementById('leave-card-to-download');
+            if (!cardToCapture) {
+                showToast('ডাউনলোড করার জন্য কোনো কার্ড নেই।', 'error');
+                return;
+            }
+            showToast('ইমেজ তৈরি হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...', 'success');
+            html2canvas(cardToCapture, { scale: 2 }).then(canvas => {
+                const link = document.createElement('a');
+                link.href = canvas.toDataURL('image/png');
+                link.download = 'leave_card.png';
+                link.click();
+            });
+        }
+        
+        DOMElements.leaveReport.downloadHtmlBtn.addEventListener('click', () => downloadLeaveCard('html'));
+        DOMElements.leaveReport.downloadDocBtn.addEventListener('click', () => downloadLeaveCard('doc'));
+        DOMElements.leaveReport.downloadImageBtn.addEventListener('click', downloadLeaveCardAsImage);
+
+        function downloadReportAsImage() {
+            const reportToCapture = DOMElements.reportGeneration.previewDiv;
+            if (!reportToCapture || !reportToCapture.innerHTML.trim()) {
+                showToast('ডাউনলোড করার জন্য কোনো রিপোর্ট নেই।', 'error');
+                return;
+            }
+            
+            showToast('ইমেজ তৈরি হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...', 'success');
+
+            html2canvas(reportToCapture, { scale: 2 }).then(canvas => {
+                const link = document.createElement('a');
+                link.href = canvas.toDataURL('image/png');
+                link.download = 'report.png';
+                link.click();
+            });
+        }
+
+        DOMElements.reportGeneration.downloadImageBtn.addEventListener('click', downloadReportAsImage);
+    });
+    </script>
+</body>
+</html>
+

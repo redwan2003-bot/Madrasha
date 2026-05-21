@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ব্যক্তিগত ক্লাস রুটিন - শিবগঞ্জ ফাযিল ডিগ্রী মাদরাসা</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tiro+Bangla&display=swap');
+        
+        body { 
+            font-family: 'Tiro Bangla', serif; 
+            background-color: #f1f5f9; 
+            margin: 0;
+            padding: 0;
+            color: #000;
+        }
+
+        /* ড্রপডাউন গ্রিডের টেক্সট ফিক্স */
+        .teacher-card p {
+            line-height: 1.6 !important; /* মাত্রা কাটিং রোধ করতে লাইন হাইট বৃদ্ধি */
+            padding-top: 4px; /* ওপর থেকে সামান্য নিচে নামানোর জন্য */
+        }
+
+        .a4-page {
+            background-color: #fff !important;
+            width: 210mm; 
+            min-height: 297mm; 
+            margin: 20px auto;
+            padding: 10mm 12mm; 
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            page-break-after: always;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        .single-routine-page {
+            background-color: #fff !important;
+            width: 210mm; 
+            height: 148.5mm;
+            margin: 20px auto;
+            padding: 10mm 12mm; 
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            border: 1px solid #eee;
+        }
+
+        .teacher-section {
+            height: 138mm;
+            display: flex;
+            flex-direction: column;
+            border-bottom: 1px dashed #000;
+            margin-bottom: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .single-mode .teacher-section {
+            height: 100%;
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .teacher-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .header-group {
+            text-align: center;
+            line-height: 1.5; 
+            margin-bottom: 8px;
+        }
+
+        .inst-name { font-size: 11.5pt !important; margin: 0; }
+        .routine-title { font-size: 12pt !important; margin: 2px 0; }
+        .routine-title b { font-weight: bold; }
+        .teacher-info { font-size: 10.5pt !important; margin: 0; }
+
+        .routine-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            border: 0.6px solid #000; 
+            table-layout: fixed; 
+        }
+        
+        .routine-table th, .routine-table td { 
+            border: 0.5px solid #000; 
+            text-align: center; 
+            vertical-align: middle; 
+            padding: 0 2px;
+        }
+
+        .routine-table th { 
+            height: 32px; 
+            font-size: 9.5pt; 
+            font-weight: normal; 
+            padding-bottom: 5px !important;
+        }
+        
+        .routine-table td { height: 58px; }
+        
+        .day-column { 
+            width: 45px; 
+            font-size: 10pt; 
+            font-weight: normal !important;
+            padding-bottom: 8px !important; 
+        }
+
+        .cell-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            line-height: 1.2;
+            padding-bottom: 4px; 
+            margin-top: -4px; 
+            width: 100%;
+        }
+
+        .cell-class { font-weight: bold; font-size: 10.4pt; }
+        .cell-sub { font-size: 9.2pt; margin-top: 1px; }
+
+        .routine-footer-meta {
+            margin-top: auto; 
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding-bottom: 21.3px; 
+            font-size: 9pt;
+        }
+
+        .signature-block {
+            text-align: center;
+            line-height: 1.3;
+            min-width: 180px;
+        }
+
+        .download-note {
+            text-align: left;
+            color: #000;
+            font-size: 8.7pt;
+            font-style: italic;
+        }
+
+        .no-print-ui { 
+            background: #fff; 
+            padding: 15px; 
+            border-bottom: 1px solid #e2e8f0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        #selectionPanel {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            max-height: 400px;
+            overflow-y: auto;
+            border-radius: 0 0 12px 12px;
+            padding: 15px;
+        }
+
+        .teacher-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 10px;
+        }
+
+        .teacher-card {
+            background: #f8fafc;
+            padding: 8px 12px; /* প্যাডিং সামান্য অ্যাডজাস্ট করা হয়েছে */
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s;
+        }
+
+        .teacher-card.selected {
+            border-color: #2563eb;
+            background: #eff6ff;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        @media print {
+            .no-print-ui { display: none !important; }
+            body { background: #fff; padding: 0; margin: 0; }
+            .a4-page { margin: 0; width: 210mm; height: 297mm; box-shadow: none; border: none; }
+            .single-routine-page { margin: 0; width: 210mm; height: 148.5mm; box-shadow: none; border: none; }
+        }
+    </style>
+</head>
+<body>
+<nav class="bg-sky-800 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+            <!-- ডেস্কটপ মেনু -->
+            <div class="hidden md:flex items-center space-x-4">
+                <a href="/" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">মূল পাতা</a>
+                <a href="/office.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">অফিস প্যানেল</a>
+                <a href="/admin.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">এডমিন প্যানেল</a>
+                <a href="/sutdentdata.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">শিক্ষার্থী তথ্য</a>
+                <a href="/routine.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">ব্যক্তিগত রুটিন</a>
+                <a href="/weeklyroutine.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">সাপ্তাহিক রুটিন</a> 
+                <a href="/classwiseroutine.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">শ্রেণিভিত্তিক রুটিন</a> 
+                <a href="/classcount.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">শিক্ষকের সাপ্তাহিক ক্লাস বিবরণী</a>
+            </div>
+            <!-- মোবাইল মেনু বাটন (হ্যামবার্গার আইকন) -->
+            <div class="md:hidden flex items-center">
+                <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
+                    <span class="sr-only">Open main menu</span>
+                    <!-- Icon when menu is closed -->
+                    <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                    <!-- Icon when menu is open (optional, for better UX) -->
+                    <svg class="hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- ডানপাশের ফাঁকা জায়গা পূরণের জন্য (ঐচ্ছিক) -->
+            <div class="hidden md:block">
+                 <div class="w-px h-px"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- মোবাইল মেনু, যা বাটনে ক্লিক করলে দেখা যাবে -->
+   <div class="md:hidden hidden" id="mobile-menu">
+        <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            <a href="/" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">মূল পাতা</a>
+            <a href="/office.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">অফিস প্যানেল</a>
+            <a href="/admin.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">এডমিন প্যানেল</a>
+            <a href="/sutdentdata.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md font-medium">শিক্ষার্থী তথ্য</a>
+            <a href="/routine.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">ব্যক্তিগত রুটিন</a>
+            <a href="/weeklyroutine.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md font-medium">সাপ্তাহিক রুটিন</a>                
+            <a href="/classwiseroutine.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md font-medium">শ্রেণিভিত্তিক রুটিন</a> 
+            <a href="/classcount.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md font-medium">শিক্ষকের ক্লাস বিবরণী</a>
+        </div>
+    </div>
+</nav>
+
+<!-- মোবাইল মেনু কাজ করার জন্য প্রয়োজনীয় জাভাস্ক্রিপ্ট -->
+<script>
+    //DOMContentLoaded অপেক্ষা করে যাতে DOM এলিমেন্টগুলো লোড হয়
+    document.addEventListener('DOMContentLoaded', () => {
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const icons = mobileMenuButton.querySelectorAll('svg');
+
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+            // আইকন পরিবর্তন করার জন্য (বন্ধ/খোলা)
+            icons.forEach(icon => icon.classList.toggle('hidden'));
+        });
+    });
+</script>
+
+    <div class="no-print-ui shadow-md">
+        <div class="max-w-6xl mx-auto relative">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-3">
+                <div class="w-full md:w-auto">
+                    <h1 class="text-lg font-bold text-gray-800"> শিক্ষকের ব্যক্তিগত রুটিন</h1>
+                    <p id="status" class="text-xs text-blue-600 font-medium italic">শিক্ষকদের তালিকা লোড হচ্ছে...</p>
+                </div>
+                <div class="flex gap-2 w-full md:w-auto">
+                    <button id="fetchBtn" onclick="initDataFetch()" class="flex-1 md:flex-none bg-blue-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-700 transition text-sm flex items-center justify-center gap-2">
+                        <i class="fas fa-sync-alt"></i> জেনারেট করুন
+                    </button>
+                    <button onclick="resetUI()" class="flex-1 md:flex-none bg-gray-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-gray-700 transition text-sm flex items-center justify-center gap-2">
+                        <i class="fas fa-redo"></i> রিফ্রেশ
+                    </button>
+                    <button id="downloadBtn" onclick="downloadAsImage()" class="flex-1 md:flex-none bg-emerald-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-emerald-700 transition text-sm flex items-center justify-center gap-2 hidden">
+                        <i class="fas fa-file-image"></i> ডাউনলোড
+                    </button>
+                </div>
+            </div>
+
+            <div onclick="togglePanel()" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-2.5 flex justify-between items-center cursor-pointer hover:bg-gray-100 transition">
+                <span id="selectedLabel" class="text-sm font-bold text-gray-700">শিক্ষক নির্বাচন করুন (০ নির্বাচিত)</span>
+                <i id="chevronIcon" class="fas fa-chevron-down text-gray-400"></i>
+            </div>
+
+            <div id="selectionPanel" class="z-50">
+                <div class="flex flex-col gap-3">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-bottom pb-3">
+                        <label class="flex items-center gap-2 cursor-pointer text-sm font-bold text-gray-700">
+                            <input type="checkbox" id="selectAll" onchange="toggleSelectAll()" class="w-4 h-4 rounded text-blue-600"> সকল শিক্ষক
+                        </label>
+                        <div class="relative w-full sm:w-64">
+                            <input type="text" id="searchTeacher" oninput="filterTeachers()" placeholder="শিক্ষক খুঁজুন..." class="w-full pl-8 pr-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <i class="fas fa-search absolute left-2.5 top-2.5 text-gray-400 text-xs"></i>
+                        </div>
+                    </div>
+                    <div id="teacherGrid" class="teacher-grid"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="pagesContainer" class="p-4"></div>
+
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxvSNDr8GagnET19YZACL65UcnFfWAKSWhXAttZVWAC5VddGpjZ0lDH40VQYkBFTg/exec";
+        const daysLabel = ["রবি", "সোম", "মঙ্গল", "বুধ", "বৃহঃ"];
+        const periodsLabel = ["১ম ঘণ্টা", "২য় ঘণ্টা", "৩য় ঘণ্টা", "৪র্থ ঘণ্টা", "৫ম ঘণ্টা", "৬ষ্ঠ ঘণ্টা", "৭ম ঘণ্টা", "৮ম ঘণ্টা"];
+
+        let teachersList = [];
+        let selectedTeachers = new Set();
+        let isPanelOpen = false;
+
+        const toBanglaNum = (str) => {
+            const numbers = { '0': '০', '1': '১', '2': '২', '3': '৩', '4': '৪', '5': '৫', '6': '৬', '7': '৭', '8': '৮', '9': '৯' };
+            return String(str).replace(/[0-9]/g, (w) => numbers[w]);
+        };
+
+        function resetUI() {
+            selectedTeachers.clear();
+            const selectAllBox = document.getElementById('selectAll');
+            const searchBox = document.getElementById('searchTeacher');
+            if(selectAllBox) selectAllBox.checked = false;
+            if(searchBox) searchBox.value = '';
+            renderTeacherGrid();
+            updateCounter();
+            document.getElementById('pagesContainer').innerHTML = '';
+            document.getElementById('downloadBtn').classList.add('hidden');
+            document.getElementById('status').innerText = `মোট ${toBanglaNum(teachersList.length)} জন শিক্ষক পাওয়া গেছে।`;
+        } 
+
+        window.onload = async () => {
+            await fetchTeachersList();
+            document.addEventListener('click', (e) => {
+                const panel = document.getElementById('selectionPanel');
+                const trigger = e.target.closest('[onclick="togglePanel()"]');
+                if (panel && !panel.contains(e.target) && !trigger && isPanelOpen) togglePanel();
+            });
+        };
+
+        function togglePanel() {
+            const panel = document.getElementById('selectionPanel');
+            const icon = document.getElementById('chevronIcon');
+            isPanelOpen = !isPanelOpen;
+            panel.style.display = isPanelOpen ? 'block' : 'none';
+            icon.className = isPanelOpen ? 'fas fa-chevron-up text-blue-500' : 'fas fa-chevron-down text-gray-400';
+        }
+
+        async function fetchTeachersList() {
+            const status = document.getElementById('status');
+            try {
+                const res = await fetch(`${SCRIPT_URL}?action=daily`);
+                const data = await res.json();
+                if (data && Array.isArray(data)) {
+                    const seen = new Set();
+                    teachersList = [];
+                    data.forEach(item => {
+                        const name = item.R_FullName;
+                        const index = item.R_Index;
+                        const key = `${name}-${index}`;
+                        if (name && !seen.has(key)) {
+                            seen.add(key);
+                            teachersList.push({ name, index, designation: item.R_Designation || 'শিক্ষক' });
+                        }
+                    });
+                    teachersList.sort((a,b) => a.name.localeCompare(b.name));
+                    renderTeacherGrid();
+                    status.innerText = `মোট ${toBanglaNum(teachersList.length)} জন শিক্ষক পাওয়া গেছে।`;
+                }
+            } catch (err) { status.innerText = "তালিকা লোড করতে ব্যর্থ!"; }
+        }
+
+        function renderTeacherGrid(list = teachersList) {
+            const grid = document.getElementById('teacherGrid');
+            grid.innerHTML = list.map(t => `
+                <div class="teacher-card ${selectedTeachers.has(t.index) ? 'selected' : ''}" onclick="toggleTeacher('${t.index}')">
+                    <input type="checkbox" ${selectedTeachers.has(t.index) ? 'checked' : ''} class="w-3 h-3 pointer-events-none">
+                    <div class="flex-1 overflow-hidden">
+                        <p class="text-[11px] font-bold truncate">
+                            ${t.name} (${t.index})
+                        </p>
+                    </div>
+                </div>
+            `).join('');
+            updateCounter();
+        }
+
+        function toggleTeacher(index) {
+            if (selectedTeachers.has(index)) selectedTeachers.delete(index);
+            else selectedTeachers.add(index);
+            renderTeacherGrid();
+        }
+
+        function toggleSelectAll() {
+            const isChecked = document.getElementById('selectAll').checked;
+            if (isChecked) teachersList.forEach(t => selectedTeachers.add(t.index));
+            else selectedTeachers.clear();
+            renderTeacherGrid();
+        }
+
+        function filterTeachers() {
+            const query = document.getElementById('searchTeacher').value.toLowerCase();
+            const filtered = teachersList.filter(t => t.name.toLowerCase().includes(query) || t.index.toString().includes(query));
+            renderTeacherGrid(filtered);
+        }
+
+        function updateCounter() {
+            const label = document.getElementById('selectedLabel');
+            label.innerText = selectedTeachers.size > 0 ? `শিক্ষক নির্বাচন: ${toBanglaNum(selectedTeachers.size)} জন সিলেক্টেড` : "শিক্ষক নির্বাচন করুন (০ নির্বাচিত)";
+        }
+
+        async function initDataFetch() {
+            if(selectedTeachers.size === 0) return;
+            if(isPanelOpen) togglePanel();
+            const status = document.getElementById('status');
+            const container = document.getElementById('pagesContainer');
+            document.getElementById('fetchBtn').disabled = true;
+            container.innerHTML = '<div class="text-center py-20 font-bold text-gray-500 italic">প্রসেসিং হচ্ছে...</div>';
+            try {
+                let targets = teachersList.filter(t => selectedTeachers.has(t.index));
+                let routines = [];
+                for (let i = 0; i < targets.length; i++) {
+                    const t = targets[i];
+                    status.innerText = `সংগ্রহ হচ্ছে: ${toBanglaNum(i + 1)}/${toBanglaNum(targets.length)}`;
+                    const res = await fetch(`${SCRIPT_URL}?action=teacher&teacherId=${encodeURIComponent(t.index)}&teacherName=${encodeURIComponent(t.name)}`);
+                    const rData = await res.json();
+                    if(rData && !rData.error) routines.push(rData);
+                }
+                renderRoutines(routines);
+                document.getElementById('downloadBtn').classList.remove('hidden');
+                document.getElementById('fetchBtn').disabled = false;
+            } catch (err) { status.innerText = "ত্রুটি!"; document.getElementById('fetchBtn').disabled = false; }
+        }
+
+        function getTeacherHTML(tData) {
+            let rows = daysLabel.map(day => {
+                let cells = periodsLabel.map(p => {
+                    const c = (tData.routine && tData.routine[day]) ? tData.routine[day][p] : null;
+                    return `<td><div class="cell-content">${c ? `<span class="cell-class">${c.class}</span><span class="cell-sub">${c.subject}</span>` : ''}</div></td>`;
+                }).join('');
+                return `<tr><td class="day-column">${day}</td>${cells}</tr>`;
+            }).join('');
+
+            const today = new Date();
+            const dateStr = toBanglaNum(`${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getFullYear()).slice(-2)}`);
+
+            return `
+                <div class="header-group">
+                    <p class="inst-name">শিবগঞ্জ ফাযিল ডিগ্রী মাদরাসা</p>
+                    <h2 class="routine-title">ব্যক্তিগত ক্লাস রুটিন: <b>${tData.fullName}</b></h2>
+                    <p class="teacher-info">পদবী: ${tData.designation} | ইনডেক্স: ${tData.index}</p>
+                </div>
+                <table class="routine-table">
+                    <thead><tr><th class="day-column">বার/ঘ:</th>${periodsLabel.map(p => `<th>${p}</th>`).join('')}</tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>
+                <div class="routine-footer-meta">
+                    <div class="download-note">অনলাইন রুটিন পোর্টাল থেকে ${dateStr} তারিখে ডাউনলোডকৃত।</div>
+                    <div class="signature-block">
+                        <p style="margin-bottom: 2px;">অধ্যক্ষ</p>
+                        <p>শিবগঞ্জ ফাযিল ডিগ্রী মাদরাসা</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderRoutines(routines) {
+            const container = document.getElementById('pagesContainer');
+            container.innerHTML = '';
+            if (routines.length === 1) {
+                const page = document.createElement('div');
+                page.className = 'single-routine-page single-mode';
+                const section = document.createElement('div');
+                section.className = 'teacher-section';
+                section.innerHTML = getTeacherHTML(routines[0]);
+                page.appendChild(section);
+                container.appendChild(page);
+            } else {
+                for (let i = 0; i < routines.length; i += 2) {
+                    const page = document.createElement('div');
+                    page.className = 'a4-page';
+                    const section1 = document.createElement('div');
+                    section1.className = 'teacher-section';
+                    section1.innerHTML = getTeacherHTML(routines[i]);
+                    page.appendChild(section1);
+                    if (routines[i + 1]) {
+                        const section2 = document.createElement('div');
+                        section2.className = 'teacher-section';
+                        section2.innerHTML = getTeacherHTML(routines[i + 1]);
+                        page.appendChild(section2);
+                    } else {
+                        const spacer = document.createElement('div');
+                        spacer.className = 'teacher-section';
+                        spacer.style.border = 'none';
+                        page.appendChild(spacer);
+                    }
+                    container.appendChild(page);
+                }
+            }
+        }
+
+        async function downloadAsImage() {
+            const status = document.getElementById('status');
+            const pages = document.querySelectorAll('.a4-page, .single-routine-page');
+            status.innerText = "ডাউনলোড শুরু হচ্ছে...";
+            for (let i = 0; i < pages.length; i++) {
+                const canvas = await html2canvas(pages[i], { scale: 3, useCORS: true });
+                const link = document.createElement('a');
+                link.download = `Routine_Teacher_${i + 1}.jpg`;
+                link.href = canvas.toDataURL("image/jpeg", 0.9);
+                link.click();
+            }
+            status.innerText = "ডাউনলোড হয়েছে।";
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>শিবগঞ্জ ফাযিল ডিগ্রী মাদরাসা - রুটিন পোর্টাল</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tiro+Bangla&display=swap');
+        
+        body { 
+            font-family: 'Tiro Bangla', serif; 
+            background-color: #f1f5f9; 
+            color: #000;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* A4 Portrait: 8.27 x 11.69 inches */
+        #printableArea {
+            background-color: #fff !important;
+            width: 794px; 
+            height: 1123px; 
+            margin: 0 auto;
+            padding: 0.4in 0.3in; 
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .inst-name { 
+            font-size: 10pt !important; 
+            font-weight: normal; /* নন-বোল্ড করা হলো */
+            margin: 0; 
+            line-height: 1.2;
+            text-align: center;
+        }
+        .routine-title { 
+            font-size: 11pt !important; 
+            font-weight: bold; 
+            margin-top: 2px; 
+            margin-bottom: 12px;
+            line-height: 1.2;
+            display: inline-block;
+        }
+
+        .routine-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            border: 0.5px solid #000; 
+            table-layout: auto; 
+        }
+        .routine-table th, .routine-table td { 
+            border: 0.2px solid #000; 
+            text-align: center; 
+            vertical-align: middle; 
+            padding: 0 !important; 
+            word-wrap: break-word;
+            background-color: transparent !important;
+            height: auto;
+        }
+
+        /* সেল কনটেন্ট হোল্ডার - সামান্য উপরে ওঠাতে প্যাডিং অ্যাডজাস্ট করা হলো */
+        .cell-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 15px;
+            width: 100%;
+            padding: 2px 0 6px 0; /* উপরে কম এবং নিচে বেশি প্যাডিং দিয়ে কন্টেন্ট উপরে তোলা হলো */
+            box-sizing: border-box;
+        }
+
+        /* হেডার স্টাইল - মাঝখানে রাখতে অ্যাডজাস্টমেন্ট */
+        .routine-table th { 
+            font-size: 9.5pt; 
+            font-weight: bold;
+            white-space: nowrap;
+            height: 35px;
+            padding: 0 !important;
+        }
+
+        .header-inner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            width: 100%;
+            padding-bottom: 4px; /* হেডারের লেখা সামান্য উপরে তোলা হলো */
+        }
+
+        .class-cell-inner {
+            font-weight: bold;
+            font-size: 10.5pt;
+            padding: 0 6px 4px 6px; /* ক্লাসের নাম সামান্য উপরে তোলা হলো */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+
+        /* বিষয় ও শিক্ষক গুচ্ছ */
+        .subject-group {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            padding: 1px 0; 
+            line-height: 1.1;
+        }
+
+        /* একাধিক বিষয়গুচ্ছের মাঝের ডিভাইডার হাইড করা হয়েছে */
+        .subject-group:not(:last-child) {
+            border-bottom: none;
+            margin-bottom: 8px;
+        }
+
+        .sub-name { 
+            display: block; 
+            font-weight: bold; 
+            font-size: 8.8pt;
+            max-width: 85px;
+            white-space: normal; 
+            margin-bottom: 1px;
+            line-height: 1;
+        }
+        .teacher-name { 
+            display: block; 
+            font-size: 9pt; 
+            font-weight: normal;
+            line-height: 1;
+        }
+
+        .no-print-ui { background: #fff; padding: 12px; border-bottom: 1px solid #ddd; }
+        .tab-active { background: #000 !important; color: #fff !important; font-weight: bold; }
+        .tab-btn { border: 1px solid #ccc; margin-right: 2px; }
+
+        @media print {
+            .no-print-ui { display: none !important; }
+            body { background: white; }
+            #printableArea { 
+                width: 8.27in; 
+                height: 11.69in; 
+                margin: 0; 
+                padding: 0.4in;
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+<nav class="bg-sky-800 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+            <!-- ডেস্কটপ মেনু -->
+            <div class="hidden md:flex items-center space-x-4">
+                <a href="/" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">মূল পাতা</a>
+                <a href="/office.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">অফিস প্যানেল</a>
+                <a href="/admin.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">এডমিন প্যানেল</a>
+                <a href="/sutdentdata.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">শিক্ষার্থী তথ্য</a>
+                <a href="/routine.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">ব্যক্তিগত রুটিন</a>
+                <a href="/weeklyroutine.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">সাপ্তাহিক রুটিন</a> 
+                <a href="/classwiseroutine.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">শ্রেণিভিত্তিক রুটিন</a> 
+                <a href="/classcount.html" class="text-gray-300 hover:bg-sky-700 hover:text-white px-3 py-2 rounded-md font-medium">শিক্ষকের সাপ্তাহিক ক্লাস বিবরণী</a>
+            </div>
+            <!-- মোবাইল মেনু বাটন (হ্যামবার্গার আইকন) -->
+            <div class="md:hidden flex items-center">
+                <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
+                    <span class="sr-only">Open main menu</span>
+                    <!-- Icon when menu is closed -->
+                    <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                    <!-- Icon when menu is open (optional, for better UX) -->
+                    <svg class="hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- ডানপাশের ফাঁকা জায়গা পূরণের জন্য (ঐচ্ছিক) -->
+            <div class="hidden md:block">
+                 <div class="w-px h-px"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- মোবাইল মেনু, যা বাটনে ক্লিক করলে দেখা যাবে -->
+   <div class="md:hidden hidden" id="mobile-menu">
+        <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            <a href="/" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">মূল পাতা</a>
+            <a href="/office.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">অফিস প্যানেল</a>
+            <a href="/admin.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">এডমিন প্যানেল</a>
+            <a href="/sutdentdata.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md font-medium">শিক্ষার্থী তথ্য</a>
+            <a href="/routine.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">ব্যক্তিগত রুটিন</a>
+            <a href="/weeklyroutine.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md font-medium">সাপ্তাহিক রুটিন</a>                
+            <a href="/classwiseroutine.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md font-medium">শ্রেণিভিত্তিক রুটিন</a> 
+            <a href="/classcount.html" class="text-gray-300 hover:bg-sky-700 hover:text-white block px-3 py-2 rounded-md font-medium">শিক্ষকের ক্লাস বিবরণী</a>
+        </div>
+    </div>
+</nav>
+
+<!-- মোবাইল মেনু কাজ করার জন্য প্রয়োজনীয় জাভাস্ক্রিপ্ট -->
+<script>
+    //DOMContentLoaded অপেক্ষা করে যাতে DOM এলিমেন্টগুলো লোড হয়
+    document.addEventListener('DOMContentLoaded', () => {
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const icons = mobileMenuButton.querySelectorAll('svg');
+
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+            // আইকন পরিবর্তন করার জন্য (বন্ধ/খোলা)
+            icons.forEach(icon => icon.classList.toggle('hidden'));
+        });
+    });
+</script>
+
+    <div class="no-print-ui shadow-md sticky top-0 z-50">
+        <div class="flex flex-wrap justify-between items-center gap-4 max-w-4xl mx-auto">
+            <div class="flex gap-1 bg-white p-1 rounded-lg">
+                <button onclick="loadRoutine('রবিবার', this)" class="tab-btn px-3 py-2 rounded tab-active text-xs">রবিবার</button>
+                <button onclick="loadRoutine('সোমবার', this)" class="tab-btn px-3 py-2 rounded text-xs">সোমবার</button>
+                <button onclick="loadRoutine('মঙ্গলবার', this)" class="tab-btn px-3 py-2 rounded text-xs">মঙ্গলবার</button>
+                <button onclick="loadRoutine('বুধবার', this)" class="tab-btn px-3 py-2 rounded text-xs">বুধবার</button>
+                <button onclick="loadRoutine('বৃহস্পতিবার', this)" class="tab-btn px-3 py-2 rounded text-xs">বৃহস্পতিবার</button>
+            </div>
+            <button id="downloadBtn" onclick="downloadAsJPG()" class="bg-black hover:bg-gray-800 text-white px-5 py-2 rounded font-bold flex items-center gap-2 transition-all shadow-lg text-xs border border-black">
+                <i class="fas fa-file-image"></i> রুটিন ডাউনলোড
+            </button>
+        </div>
+    </div>
+
+    <div id="printableArea" class="my-5">
+        <div class="text-center">
+            <p class="inst-name">শিবগঞ্জ ফাযিল ডিগ্রী মাদরাসা</p>
+            <h2 id="printDayLabel" class="routine-title">একনজরে রুটিন : রবিবার</h2>
+        </div>
+
+        <div id="tableContainer" class="w-full flex-grow flex">
+            <div class="text-center py-40 w-full text-sm">তথ্য লোড হচ্ছে...</div>
+        </div>
+    </div>
+
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxvSNDr8GagnET19YZACL65UcnFfWAKSWhXAttZVWAC5VddGpjZ0lDH40VQYkBFTg/exec";
+        const hours = ["১ম ঘণ্টা", "২য় ঘণ্টা", "৩য় ঘণ্টা", "৪র্থ ঘণ্টা", "৫ম ঘণ্টা", "৬ষ্ঠ ঘণ্টা", "৭ম ঘণ্টা", "৮ম ঘণ্টা"];
+        let currentDay = "রবিবার";
+
+        const getPeriodIndex = (val) => {
+            if (!val) return -1;
+            const str = val.toString().trim();
+            const map = {"১":0,"1":0,"২":1,"2":1,"৩":2,"3":2,"৪":3,"4":3,"৫":4,"5":4,"৬":5,"6":5,"৭":6,"7":6,"৮":7,"8":7};
+            for (let key in map) if (str.includes(key)) return map[key];
+            return -1;
+        };
+
+        async function downloadAsJPG() {
+            const btn = document.getElementById('downloadBtn');
+            const area = document.getElementById('printableArea');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> প্রসেসিং...';
+
+            html2canvas(area, {
+                scale: 4, 
+                backgroundColor: "#ffffff",
+                logging: false,
+                useCORS: true,
+                allowTaint: true,
+                onclone: (clonedDoc) => {
+                    const cells = clonedDoc.querySelectorAll('.cell-content');
+                    cells.forEach(cell => {
+                        cell.style.paddingTop = "0px";
+                        cell.style.marginTop = "-2px"; /* ডাউনলোড ইমেজে আরও সামান্য উপরে তোলার চেষ্টা */
+                    });
+                }
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `Routine_Shibganj_${currentDay}.jpg`;
+                link.href = canvas.toDataURL("image/jpeg", 0.95);
+                link.click();
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-file-image"></i> রুটিন ডাউনলোড (JPG)';
+            });
+        }
+
+        async function loadRoutine(day, btn) {
+            currentDay = day;
+            document.getElementById('printDayLabel').innerText = `একনজরে রুটিন : ${currentDay}`;
+            
+            if(btn) {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active'));
+                btn.classList.add('tab-active');
+            }
+            
+            const container = document.getElementById('tableContainer');
+            container.innerHTML = '<div class="text-center py-40 w-full"><p class="animate-pulse">সার্ভার থেকে রুটিন আনা হচ্ছে...</p></div>';
+
+            try {
+                const response = await fetch(`${SCRIPT_URL}?day=${encodeURIComponent(day)}&t=${Date.now()}`);
+                const data = await response.json();
+                renderTable(data);
+            } catch (e) {
+                container.innerHTML = '<div class="text-center py-40 w-full text-red-600">তথ্য লোড করা সম্ভব হয়নি।</div>';
+            }
+        }
+
+        function renderTable(data) {
+            const routineMap = {};
+            const classList = [];
+
+            data.forEach(item => {
+                let rawCls = (item.R_Class || "").toString().trim();
+                if (!rawCls) return;
+                
+                let clsBase = rawCls.replace(/শ্রেণি|শ্রেণী|বর্ষ/g, '').trim();
+                const numericMap = {
+                    "১":"১ম", "২":"২য়", "৩":"৩য়", "৪":"৪র্থ", "৫":"৫ম", 
+                    "৬":"৬ষ্ঠ", "৭":"৭ম", "৮":"৮ম", "৯":"৯ম", "১০":"১০ম",
+                    "1":"১ম", "2":"২য়", "3":"৩য়", "4":"৪র্থ", "5":"৫ম", 
+                    "6":"৬ষ্ঠ", "7":"৭ম", "8":"৮ম", "9":"৯ম", "10":"১০ম"
+                };
+                
+                let cls;
+                if(numericMap[clsBase]) {
+                    cls = numericMap[clsBase] + " শ্রেণি";
+                } else {
+                    cls = clsBase; 
+                }
+
+                const rawPrd = (item.R_Period || "").toString().trim();
+                const prdIdx = getPeriodIndex(rawPrd);
+                const sub = (item.R_Subject || "").toString().trim();
+                const teacher = (item.R_NickName || "").toString().trim();
+
+                if (sub || teacher) {
+                    if (!routineMap[cls]) {
+                        routineMap[cls] = Array.from({length: 8}, () => []);
+                        classList.push(cls);
+                    }
+                    if (prdIdx !== -1) {
+                        routineMap[cls][prdIdx].push({ sub, teacher });
+                    }
+                }
+            });
+
+            if (classList.length === 0) {
+                document.getElementById('tableContainer').innerHTML = '<p class="text-center py-40 w-full">কোনো তথ্য পাওয়া যায়নি।</p>';
+                return;
+            }
+
+            let html = `<table class="routine-table"><thead><tr><th style="width:1%"><div class="header-inner">শ্রেণি</div></th>`;
+            hours.forEach(h => html += `<th><div class="header-inner">${h}</div></th>`);
+            html += `</tr></thead><tbody>`;
+
+            classList.forEach(cls => {
+                html += `<tr><td><div class="class-cell-inner">${cls}</div></td>`;
+                for (let i = 0; i < 8; i++) {
+                    const entries = routineMap[cls][i];
+                    html += `<td><div class="cell-content">`;
+                    if (entries && entries.length > 0) {
+                        entries.forEach(entry => {
+                            html += `
+                                <div class="subject-group">
+                                    <span class="sub-name">${entry.sub}</span>
+                                    <span class="teacher-name">${entry.teacher}</span>
+                                </div>
+                            `;
+                        });
+                    }
+                    html += `</div></td>`;
+                }
+                html += `</tr>`;
+            });
+            html += `</tbody></table>`;
+            document.getElementById('tableContainer').innerHTML = html;
+        }
+
+        window.onload = () => loadRoutine('রবিবার');
+    </script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+# Dependencies
+web/node_modules/
+web/.next/
+
+# Environment & secrets
+.env
+.env.local
+.env.*.local
+api/db_connect.php
+api/error_log
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.cursor/
+
+# Supabase local
+supabase/.branches/
+supabase/.temp/
