@@ -104,6 +104,42 @@ export type Database = {
         };
         Returns: Json;
       };
+      submit_leave_request: {
+        Args: {
+          p_start: string;
+          p_end: string;
+          p_leave_type: string;
+          p_comment?: string;
+        };
+        Returns: Json;
+      };
+      batch_submit_monitor_reports: {
+        Args: { p_reports: Json };
+        Returns: Json;
+      };
+      get_leave_card_summary: {
+        Args: { p_teacher_index: string };
+        Returns: Json;
+      };
+      upsert_monthly_attendance: {
+        Args: {
+          p_year: number;
+          p_month: number;
+          p_class: string;
+          p_rows: Json;
+        };
+        Returns: Json;
+      };
+      office_submit_leave: {
+        Args: {
+          p_teacher_index: string;
+          p_start: string;
+          p_end: string;
+          p_leave_type: string;
+          p_comment?: string;
+        };
+        Returns: Json;
+      };
     };
     Enums: {
       app_role: AppRole;

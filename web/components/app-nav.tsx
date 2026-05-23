@@ -1,7 +1,8 @@
 "use client";
 
+import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
 const LINKS = [
@@ -14,7 +15,15 @@ const LINKS = [
 
 export function AppNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+
+  async function signOut() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/login");
+    router.refresh();
+  }
 
   const linkClass = (href: string) => {
     const active = pathname === href;
@@ -36,6 +45,14 @@ export function AppNav() {
             </Link>
           ))}
         </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={signOut}
+            className="hidden cursor-pointer rounded-md px-3 py-2 text-sm text-gray-300 transition-colors duration-200 hover:bg-sky-700 hover:text-white md:block"
+          >
+            লগআউট
+          </button>
         <button
           type="button"
           className="inline-flex cursor-pointer items-center justify-center rounded-md p-2 text-gray-400 hover:bg-sky-700 hover:text-white md:hidden"
@@ -52,6 +69,7 @@ export function AppNav() {
             )}
           </svg>
         </button>
+        </div>
       </div>
       <div
         id="mobile-menu"
@@ -67,6 +85,16 @@ export function AppNav() {
             {l.label}
           </Link>
         ))}
+        <button
+          type="button"
+          onClick={() => {
+            setOpen(false);
+            signOut();
+          }}
+          className="mt-2 block w-full cursor-pointer rounded-md px-3 py-2 text-left text-sm font-medium text-gray-300 hover:bg-sky-700 hover:text-white"
+        >
+          লগআউট
+        </button>
       </div>
     </nav>
   );

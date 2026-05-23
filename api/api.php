@@ -237,6 +237,15 @@ try {
             $response = generate_report($conn, $report_subtype, $timeframe, $date, $month, $year);
             break;
             
+        case 'export_for_supabase':
+            $secret = $_REQUEST['import_secret'] ?? '';
+            $expected = getenv('LEGACY_IMPORT_SECRET') ?: 'madrasha-supabase-import';
+            if ($secret !== $expected) {
+                throw new Exception('Invalid import secret.');
+            }
+            $response = export_for_supabase($conn);
+            break;
+
         case 'batchSubmitReports':
             $reports = isset($_POST['reports']) ? json_decode($_POST['reports'], true) : [];
             $success_count = 0;

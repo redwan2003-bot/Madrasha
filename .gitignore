@@ -8,6 +8,7 @@ web/.next/
 .env.*.local
 api/db_connect.php
 api/error_log
+deploy/.ftp.env
 
 # OS / IDE
 .DS_Store
@@ -17,3 +18,10 @@ Thumbs.db
 # Supabase local
 supabase/.branches/
 supabase/.temp/
+
+# Root Node modules
+/node_modules/
+/package-lock.json
+/package.json
+/skills-lock.json
+/.agents/

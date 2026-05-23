@@ -3,6 +3,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { hasSupabaseClientEnv } from "@/lib/supabase/env";
 import type { MonitoringDashboard } from "@/types/database";
 
 function todayIso(): string {
@@ -14,10 +15,7 @@ export function useMonitoringDashboard() {
   const queryClient = useQueryClient();
   const date = todayIso();
 
-  const hasSupabase = Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-  );
+  const hasSupabase = hasSupabaseClientEnv();
 
   const query = useQuery({
     queryKey: ["monitoring-dashboard", date],

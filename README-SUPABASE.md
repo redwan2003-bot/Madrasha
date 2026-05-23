@@ -37,6 +37,29 @@ supabase db push
 
 Or paste each file in **SQL Editor** (order: `20250522100000` → `20250522100001` → `20250522100002`).
 
+If you already ran the combined `RUN_IN_SQL_EDITOR.sql` once, **do not run it again**. Use patches only:
+
+- `PATCH_GOOGLE_AUTH_ONLY.sql` — profile trigger for Google sign-in
+- `PATCH_LEAVE_AND_BATCH.sql` — leave requests + batch monitor reports
+- `PATCH_PANEL_PAGES.sql` — admin role + office/leave/students RPCs (required for panel pages)
+- `SET_ADMIN_BY_EMAIL.sql` — promote `rahmmed2330756@bscse.uiu.ac.bd` only
+
+Verify with `VERIFY_SCHEMA.sql`.
+
+**Admin email:** `rahmmed2330756@bscse.uiu.ac.bd` — sign in with Google once, then run `PATCH_PANEL_PAGES.sql` or `SET_ADMIN_BY_EMAIL.sql`.
+
+## Import legacy MySQL data
+
+See [scripts/IMPORT_LEGACY.md](scripts/IMPORT_LEGACY.md). Quick start:
+
+1. Upload `api/export_for_supabase.php` and updated `api/functions.php` to `sfdm.xyz/api/`
+2. `cd web && npm run import:legacy`
+
+### Google Sign-In
+
+Enable in Google Cloud + Supabase, then use **Google দিয়ে প্রবেশ** on `/login`.  
+Full steps: [web/docs/GOOGLE_SIGNIN_SETUP.md](web/docs/GOOGLE_SIGNIN_SETUP.md)
+
 ## 3. Configure Next.js app
 
 ```powershell

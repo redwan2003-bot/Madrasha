@@ -1025,5 +1025,69 @@ function generate_monitoring_duty_report($conn) {
     $data = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     return ['title' => 'মনিটরিং ডিউটি রিপোর্ট', 'subtitle' => 'স্থায়ী মনিটরিং দলের তালিকা', 'data' => $data];
 }
+
+/**
+ * Full MySQL dump for Supabase migration (passwords stripped).
+ * Call via api.php?action=export_for_supabase&import_secret=YOUR_SECRET
+ */
+function export_for_supabase($conn) {
+    $teachers = get_all_teachers_with_class_counts($conn);
+    foreach ($teachers as &$t) {
+        unset($t['Password'], $t['password'], $t['NickName']);
+    }
+    unset($t);
+
+    $routine = $conn->query(
+        "SELECT Day, Period, Class, Subject, TeacherIndex FROM routine ORDER BY Day, Period, Class"
+    )->fetch_all(MYSQLI_ASSOC);
+
+    $leaves = $conn->query(
+        "SELECT TeacherIndex, LeaveStart, LeaveEnd, LeaveType, Comment FROM leaves ORDER BY LeaveStart DESC"
+    )->fetch_all(MYSQLI_ASSOC);
+
+    $reports = $conn->query(
+        "SELECT * FROM reports ORDER BY ReportDate DESC, id DESC LIMIT 50000"
+    )->fetch_all(MYSQLI_ASSOC);
+
+    $students = $conn->query(
+        "SELECT id, Roll, Name, Gender, Class FROM students ORDER BY Class, Roll"
+    )->fetch_all(MYSQLI_ASSOC);
+
+    $monthly = $conn->query(
+        "SELECT id, student_id, year, month, days_present, comment FROM student_monthly_attendance"
+    )->fetch_all(MYSQLI_ASSOC);
+
+    $monitoring_team = $conn->query("SELECT * FROM monitoring_team")->fetch_all(MYSQLI_ASSOC);
+    $special_messages = $conn->query("SELECT MessageKey, MessageValue FROM special_messages")->fetch_all(MYSQLI_ASSOC);
+    $saved_messages = $conn->query("SELECT id, message_text FROM saved_messages ORDER BY id")->fetch_all(MYSQLI_ASSOC);
+    $duty_history = $conn->query("SELECT * FROM duty_history")->fetch_all(MYSQLI_ASSOC);
+    $temporary_duties = $conn->query("SELECT * FROM temporary_duties")->fetch_all(MYSQLI_ASSOC);
+
+    return [
+        'status' => 'success',
+        'exported_at' => date('c'),
+        'counts' => [
+            'teachers' => count($teachers),
+            'routine' => count($routine),
+            'leaves' => count($leaves),
+            'reports' => count($reports),
+            'students' => count($students),
+            'student_monthly_attendance' => count($monthly),
+        ],
+        'data' => [
+            'teachers' => $teachers,
+            'routine' => $routine,
+            'leaves' => $leaves,
+            'reports' => $reports,
+            'students' => $students,
+            'student_monthly_attendance' => $monthly,
+            'monitoring_team' => $monitoring_team,
+            'special_messages' => $special_messages,
+            'saved_messages' => $saved_messages,
+            'duty_history' => $duty_history,
+            'temporary_duties' => $temporary_duties,
+        ],
+    ];
+}
 ?>
 

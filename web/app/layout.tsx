@@ -26,7 +26,7 @@ export default function RootLayout({
       <body className={`${tiroBangla.variable} min-h-screen antialiased`}>
         <Providers>
           <AppNav />
-          <main className="mx-auto max-w-lg px-4 py-6 sm:max-w-2xl lg:max-w-4xl">
+          <main className="mx-auto px-4 py-6">
             {children}
           </main>
         </Providers>
